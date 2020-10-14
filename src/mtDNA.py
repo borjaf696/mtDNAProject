@@ -1,5 +1,5 @@
 # Borja :)
-import os, sys
+import sys
 import pandas as pd
 
 control_lsu = '../control/DV-gen-LSU.csv'
@@ -30,19 +30,27 @@ def add_cv(df_section, df_control):
         * Column: Genomic
     '''
     df_agg = df_control.groupby('Genomic').first()
-    cvtot, cvmit = [], []
-    for i in df_section['Position']:
-        ind = str(i)
-        if ind in df_agg.index:
-            cvtot.append(df_agg.loc[ind]['CVTOT'])
-            cvmit.append(df_agg.loc[ind]['CVMIT'])
-    df_section['CVTOT'] = cvtot
-    df_section['CVMIT'] = cvmit
+    cvtot, cvmit, appearences = [], [], []
+    for index, row in df_control.iterrows():
+        genomic_pos = row['Genomic']
+        df_tmp = df_section.loc[df_section['Position'] == genomic_pos]
+        for i2, r2 in df_tmp.iterrows():
+            cvtot.append(row['CVTOT'])
+            cvmit.append(row['CVMIT'])
+            appearences.append(r2['GB Seqs'])
+        if df_tmp.empty:
+            cvtot.append(row['CVTOT'])
+            cvmit.append(row['CVMIT'])
+            appearences.append(0)
+    return pd.DataFrame({'CVTOT':cvtot, 'CVMIT':cvmit,'GB Seqs':appearences})
+    df_tmp = df_control.loc[~df_control.Genomic.isin(df_agg.index)]
+    new_pot_df = {'Position':[],'GB Seqs':[],'Mutated':[],'Reference Base':[],'CVTOT':[],'CVMIT':[]}
 
 if __name__ == '__main__':
     mitomap, tsv_read = [], False
     print('python mtDNA.py --mitomap comma_separated_files --somatic comma_separated_files')
     df_control_lsu = pd.read_csv(control_lsu, sep = ';')
+    df_control_lsu['Genomic'] = pd.to_numeric(df_control_lsu['Genomic'].fillna(-1))
     print(df_control_lsu)
     for i in sys.argv:
         if tsv_read:
@@ -63,6 +71,6 @@ if __name__ == '__main__':
         print('SSU MitoMap information: ',ssu_df)
         # Process lsu
         preprocess_df(lsu_df)
-        add_cv(lsu_df, df_control_lsu)
-        lsu_df[['Position','GB Seqs','Mutated Base','Reference Base','CVTOT','CVMIT']].to_csv('../output/lsu_df.csv')
-        print('LSU MitoMap information: ', lsu_df)
+        results_df = add_cv(lsu_df, df_control_lsu)
+        results_df[['GB Seqs','CVTOT','CVMIT']].to_csv('../output/lsu_df.csv')
+        print('LSU MitoMap information: ', results_df)
