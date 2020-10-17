@@ -30,7 +30,7 @@ def add_cv(df_section, df_control):
         * Column: Genomic
     '''
     df_agg = df_control.groupby('Genomic').first()
-    cvtot, cvmit, appearences = [], [], []
+    cvtot, cvmit, appearences, positions = [], [], [],[]
     for index, row in df_control.iterrows():
         genomic_pos = row['Genomic']
         df_tmp = df_section.loc[df_section['Position'] == genomic_pos]
@@ -38,11 +38,13 @@ def add_cv(df_section, df_control):
             cvtot.append(row['CVTOT'])
             cvmit.append(row['CVMIT'])
             appearences.append(r2['GB Seqs'])
+            positions.append(r2['Position'])
         if df_tmp.empty:
             cvtot.append(row['CVTOT'])
             cvmit.append(row['CVMIT'])
             appearences.append(0)
-    return pd.DataFrame({'CVTOT':cvtot, 'CVMIT':cvmit,'GB Seqs':appearences})
+            positions.append(row['position'])
+    return pd.DataFrame({'Position':positions,'CVTOT':cvtot, 'CVMIT':cvmit,'GB Seqs':appearences})
     df_tmp = df_control.loc[~df_control.Genomic.isin(df_agg.index)]
     new_pot_df = {'Position':[],'GB Seqs':[],'Mutated':[],'Reference Base':[],'CVTOT':[],'CVMIT':[]}
 
@@ -72,5 +74,5 @@ if __name__ == '__main__':
         # Process lsu
         preprocess_df(lsu_df)
         results_df = add_cv(lsu_df, df_control_lsu)
-        results_df[['GB Seqs','CVTOT','CVMIT']].to_csv('../output/lsu_df.csv')
+        results_df.to_csv('../output/lsu_df.csv')
         print('LSU MitoMap information: ', results_df)
