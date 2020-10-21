@@ -18,6 +18,7 @@ require(gamlss)
 require(gamlss.dist)
 require(locfit)
 require(KernSmooth)
+require(MASS)
 ###
 data <- na.omit(read.csv('output/lsu_df.csv', sep = ',', dec = '.', header = T))
 dim(data)
@@ -282,4 +283,16 @@ for (a in l_a){
          lty=c(2,2,2),col=c("red","blue","orange"), ncol=1, lwd=rep(2,3), inset = .05, cex=0.75)
 }
 
-## No paramétrica
+## Modelos no paramétricos:
+#### Splines.
+####    * Smoothing spline
+####    * B-Splines
+####    * P-Splines
+dfs <- seq(2, 10, by = 2)
+for (df in dfs)
+{
+  spl <- smooth.spline(x,y, df = 6)
+  summary(spl)
+}
+#### Modelos aditivos.
+#### Modelos semiparamétricos
