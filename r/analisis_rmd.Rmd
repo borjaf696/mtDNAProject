@@ -2,12 +2,21 @@
 title: "Análisis mtDNA: LSU"
 author: "Borja Freire Castro"
 date: "1/10/2020"
-output: pdf_document
-fig_width: 10
-fig_height: 4
+output:
+  html_document:
+    fig_width: 7
+    fig_height: 6
 ---
 
-```{r echo=FALSE, cache=FALSE, results=FALSE, warning=FALSE, comment=FALSE, warning=FALSE}
+El documento trata de explicar los análisis realizados y ofrecer una visualización de estos de cara a su evaluación. 
+Indicaciones:
+  * Los datos con índices de conservación se han eliminado del conjunto de datos global (apartándolos para un potencial análisis univariante).
+  * Para los datos se muestra tanto su versión normal como la logarítmica, y adicionalmente para los métodos logísticos se ha dicotomizado el conjunto de datos (>0, dado que más bajaba en exceso la cantidad de datos en la muestra)
+  * Los modelos empleados los podemos diferenciar en paramétricos (logística, poisson, binomial, zeros inflados) y no paramétricos (logística local, splines (smoothing, B y P), loess). Además, se ha incorporado la regresión cuantil.
+  
+En líneas generales parece que existe una tendencia al crecimiento en el número de apariciones a medida que crece el índice de conservación (CV), hasta un CV aproximado de 1.0 y luego comienza nuevamente a caer (esto se ve especialmente en el caso de ajustes no paramétricos con la variable discretizada). Aunque, este crecimiento siempre está limitado a la franja 0:1, para todos los valores de Apariciones, log(Apariciones + 1) y dicotómica.
+
+```{r echo = FALSE, comment=FALSE, warning=FALSE}
 require(ggplot2)
 require(pscl)
 require(boot)
@@ -171,7 +180,7 @@ for (a in l_a)
   # BinomNeg
   lines(x,Pr_inf_sP_ngbin_1,col="orange",type="l",lwd=2,lty=1)
   lines(x,Pr_inf_sP_ngbin_2,col="orange",type="l",lwd=2,lty=2)
-  legend("topleft", c("Poisson 1","Poisson 2","Poisson 3","Default"
+  legend("topright", c("Poisson 1","Poisson 2","Poisson 3","Default"
     ,"Geometric 1","Geometric 2", "Binom 1", "Binom 2"),
          lty=c(1,2,3,1,1,2,1,2),col=c(rep("blue",3),"pink",rep("red",2),rep("orange",2)),
          ncol=1, lwd=rep(2,7), inset = .05)
@@ -193,7 +202,7 @@ for (a in l_a)
   lines(x,log(Pr_inf_sP_geo1+1),col="red",type="l",lty = 2,lwd = 2)
   lines(x,log(Pr_inf_sP_ngbin_1+1),col="orange",type="l",lty = 1, lwd = 2)
   lines(x,log(Pr_inf_sP_ngbin_2+1),col="orange",type="l",lty = 2, lwd = 2)
-  legend("topleft", c("Poisson 1","Poisson 2","Poisson 3","Default"
+  legend("topright", c("Poisson 1","Poisson 2","Poisson 3","Default"
     ,"Geometric 1","Geometric 2", "Binom 1", "Binom 2"),
          lty=c(1,2,3,1,1,2,1,2),col=c(rep("blue",3),"pink",rep("red",2),rep("orange",2)),
          ncol=1, lwd=rep(2,7), inset = .05)
@@ -243,19 +252,19 @@ for (a in l_a){
   ## Ajuste lineal con enlaces
   for (i in 1:5) {
     m.l[[fam.gamlss[i]]] <- gamlss(GB.Seqs~ CVTOT, data=na.omit(data_tmp),
-                                   family = fam.gamlss[i], n.cyc = 20, trace = FALSE)$aic
+                                   family = fam.gamlss[i], n.cyc = 5, trace = FALSE)$aic
   }
   ## Regresión polinómico de grado 2 con los enlaces
   for (i in 1:5) {
     m.q[[fam.gamlss[i]]] <-GAIC(  gamlss(GB.Seqs ~ poly(CVTOT,2),
                                          data=data_tmp, family = fam.gamlss[i],
-                                         n.cyc = 20, trace = FALSE))
+                                         n.cyc = 5, trace = FALSE))
   }
   ## Smooth cubic splines (suavización via splines cúbicos)
   for (i in 1:5) {
     m.s[[fam.gamlss[i]]] <-GAIC(  gamlss(GB.Seqs ~ cs(CVTOT),
                                          data=na.omit(data_tmp), family = fam.gamlss[i],
-                                         n.cyc = 20, trace = FALSE))
+                                         n.cyc = 5, trace = FALSE))
   }
   print(unlist(m.l))
   print(unlist(m.q))
@@ -269,7 +278,7 @@ for (a in l_a){
   for (i in 1:5) {
     m.ql[[fam.gamlss[i]]] <- GAIC(gamlss(GB.Seqs ~ poly(CVTOT, 2),
                                          data=na.omit(data_tmp), sigma.fo = ~CVTOT,
-                                         family = fam.gamlss[i], n.cyc = 60, trace = FALSE))
+                                         family = fam.gamlss[i], n.cyc = 5, trace = FALSE))
   }
   print(unlist(m.ql))
 
@@ -282,13 +291,13 @@ for (a in l_a){
   ## En base a esto vamos a evaluar los resultados via plot
   # Lineal + ajuste de sd
   mL <- gamlss(GB.Seqs~CVTOT , data=na.omit(data_tmp), family =PIG,
-               sigma.fo=~CVTOT, n.cyc = 20, trace = FALSE)
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
   # Cuadrático + ajuste de sd
   mC <- gamlss(GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family =PIG,
-               sigma.fo=~CVTOT, n.cyc = 20, trace = FALSE)
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
   # Vía smoothing spline + ajuste de sd
   mS <- gamlss(GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family =PIG,
-               sigma.fo=~CVTOT, n.cyc = 20, trace = FALSE)
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
 
   # Obtenemos predicciones
   mL.p <- predict(mL, what = "mu", newdata=data.frame("CVTOT"=x),
@@ -337,7 +346,7 @@ for (i in 1:(L-1))
   }
 abline(rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L] ,method="br"),col="tomato",lty=1,lwd=2)
 abline(lm(GB.Seqs~ CVTOT, data=data_filtered),col="red", lty=2, lwd = 2)
-legend("topleft",leg, col=c(colores[(L-1):1],"tomato","red"), lty=c(rep(1,L),2), inset=0.025,lwd = 2)
+legend("topright",leg, col=c(colores[(L-1):1],"tomato","red"), lty=c(rep(1,L),2), inset=0.025,lwd = 2)
 ```
 
 Los resultados son bastante esperables sobretodo teniendo en cuenta la cantidad de 0's que tienen los datos de partida. Como se puede ver salvo para casos de cuantiles muy extremos 0.05-0.95 o 0.1-0.9, no se ve una pendiente significativa.
@@ -346,7 +355,7 @@ Los resultados son bastante esperables sobretodo teniendo en cuenta la cantidad 
 
 Análisis via curvas spline:
 
-```{r}
+```{r warning=FALSE}
 splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT, type = 'regular') {
   x_l <- DataSub[,columna_x]
   y_l <- DataSub[,columna_y]
@@ -424,7 +433,7 @@ Estudios a través de curvas Spline:
   * Smoothing spline:
     * Problema: selección de los grados de libertad, en este caso no parece muy problemático dado que con 4 ya obtenemos un buen ajuste y su incremento solo implica un crecimiento del sobreajuste y una menor suavidad de la curva.
 
-```{r}
+```{r warning=FALSE}
 par(mar=c(1,1,1,1))
 ## Modelos no paramétricos:
 #### Splines.
@@ -452,7 +461,7 @@ for (a in l_a)
 
   * B-Splines - Se puede ver claramente que el ajuste es altamente similar al obtenido con el smoothing spline, a mayores incrementar los df's o filtrar outliers no implica grandes cambios. 
   
-```{r}
+```{r warning=FALSE}
 l_a <- c(0.0, 0.025,0.05)
 for (a in l_a){
   # Eliminamos datos fuera de lugar
@@ -479,7 +488,7 @@ for (a in l_a){
 
   * P-Splines - los resultados de la evaluación del modelo vía gam.check demuestran que no es viable el P-spline pues no se cumplen las hipótesis de partida ni con imaginación, además en la mayor parte de casos el valor de k se encuentra extrañamente infraestimado (lo que no creo que sea una buena noticia)
   
-```{r,include = FALSE, echo = FALSE }
+```{r,include = FALSE, echo = FALSE,warning=FALSE }
 # Selección de la dimensión de la base y base a emplear:
 l_a <- c(0.0, 0.025,0.05)
 for (a in l_a){
@@ -511,7 +520,7 @@ for (a in l_a){
   
   Por probar.
   
-```{r}
+```{r warning=FALSE}
 l_a <- c(0.0, 0.025,0.05)
 for (a in l_a){
   # Eliminamos datos fuera de lugar
@@ -576,6 +585,8 @@ log_loc <- sm.binomial(data_filtered$CVTOT,data_filtered$Bin.GB.Seqs,h=h,add=T,c
 lines(log_loc$eval.points,log_loc$estimate,type="l",col="blue",lwd=2)
 lines(log_loc$eval.points,log_loc$upper,col="blue",lty=2)
 lines(log_loc$eval.points,log_loc$lower,col="blue",lty=2)
+
+legend("topright", c("Logistica","Loess","Logistica Local"),lty=c(1,1,1),col=c('red', 'green','blue'),ncol=1,lwd=rep(2,3), inset = .05)
 ```
 
 A la vista de los resultados parece lógico decir que la regresión logística clásica obvia la caída final de probabilidad, pero por otro lado parece correlar en gran medida con los visto para los ajustes no paramétricos tipo, spline.
