@@ -1,7 +1,7 @@
 ---
 title: "Análisis mtDNA: LSU"
 author: "Borja Freire Castro"
-date: "1/10/2020"
+date: "23/10/2020"
 output:
   html_document:
     fig_width: 7
@@ -10,11 +10,12 @@ output:
 
 El documento trata de explicar los análisis realizados y ofrecer una visualización de estos de cara a su evaluación. 
 Indicaciones:
+
   * Los datos con índices de conservación se han eliminado del conjunto de datos global (apartándolos para un potencial análisis univariante).
-  * Para los datos se muestra tanto su versión normal como la logarítmica, y adicionalmente para los métodos logísticos se ha dicotomizado el conjunto de datos (>0, dado que más bajaba en exceso la cantidad de datos en la muestra)
-  * Los modelos empleados los podemos diferenciar en paramétricos (logística, poisson, binomial, zeros inflados) y no paramétricos (logística local, splines (smoothing, B y P), loess). Además, se ha incorporado la regresión cuantil.
+  * Para los datos se muestra tanto su versión normal como la logarítmica, y adicionalmente para los métodos logísticos se ha dicotomizado el conjunto de datos (unicamente bajo el criterio de apariciones >0, puesto que incrementar más el umbral  bajaba en exceso la cantidad de datos en la muestra)
+  * Los modelos empleados los podemos diferenciar en paramétricos: logística, poisson, binomial y zeros inflados; y no paramétricos: logística local, splines (smoothing, B y P) y loess. Además, se ha incorporado la regresión cuantil.
   
-En líneas generales parece que existe una tendencia al crecimiento en el número de apariciones a medida que crece el índice de conservación (CV), hasta un CV aproximado de 1.0 y luego comienza nuevamente a caer (esto se ve especialmente en el caso de ajustes no paramétricos con la variable discretizada). Aunque, este crecimiento siempre está limitado a la franja 0:1, para todos los valores de Apariciones, log(Apariciones + 1) y dicotómica.
+En líneas generales parece que existe una tendencia al crecimiento en el número de apariciones a medida que crece el índice de conservación (CV), hasta un CV aproximado de 1.0 y luego comienza nuevamente a caer (esto se ve especialmente en el caso de ajustes no paramétricos con la variable discretizada). Este crecimiento siempre está limitado a la franja 0:1, para todos los valores de Apariciones, log(Apariciones + 1) y dicotómica.
 
 ```{r echo = FALSE, comment=FALSE, warning=FALSE}
 require(ggplot2)
@@ -34,6 +35,8 @@ library(sm)
 
 Carga y preprocesamiento de los datos.
 
+El histograma de número de apariciones es poco explicativo dado que la cantidad de Apariciones iguales a 0, es extremadamente alta. Se muestran adicionalmente los histogramas para apariciones > 0 y > 1, aunque pese a empezar a mostrar algo de curva sigue habiendo un desbalanceo demasiado elevado.
+
 ```{r}
 data <- na.omit(read.csv('../output/lsu_df.csv', sep = ',', dec = '.', header = T))
 dim(data)
@@ -48,15 +51,20 @@ data_filtered <- data[data$CVTOT != -1,]
 # Visualización de los hist de data_filtered
 sum(data_filtered$GB.Seqs == 0)
 sum(data_filtered$GB.Seqs != 0)
-hist(data_filtered$GB.Seqs, xlab = 'Apariciones', breaks = 'fd', freq = F)
+par(mfrow = c(1,3))
+hist(data_filtered$GB.Seqs, xlab = 'Apariciones', breaks = 'fd', freq = F, main = 'Histograma apariciones')
+hist(data_filtered$GB.Seqs[data_filtered$GB.Seqs > 0], xlab = 'Apariciones', breaks = 'fd', freq = T,main = 'Histograma apariciones (apariciones > 0)')
+hist(data_filtered$GB.Seqs[data_filtered$GB.Seqs > 1], xlab = 'Apariciones', breaks = 'fd', freq = T,main = 'Histograma apariciones (apariciones > 1)')
+par(mfrow = c(1,2))
 hist(data_filtered$CVTOT[data_filtered$GB.Seqs != 0],
-     breaks = 'fd', freq = F, xlab = 'CVindex Apariciones > 0')
+     breaks = 'fd', freq = F, xlab = 'CVindex Apariciones > 0', main = 'Histograma CV(apariciones > 0)')
 hist(data_filtered$CVTOT[data_filtered$GB.Seqs == 0],
-     breaks = 'fd', freq = F, xlab = 'CVindex Apariciones == 0')
+     breaks = 'fd', freq = F, xlab = 'CVindex Apariciones == 0', main = 'Histograma CV(apariciones == 0)')
 summary(data_neg)
 summary(data_filtered)
+par(mfrow = c(1,1))
 plot(data_filtered$CVTOT,data_filtered$GB.Seqs,pch=1,ylim = c(0,30),
-     xlab="CVTOT",ylab="Appearances")
+     xlab="CVTOT",ylab="Appearances", main = 'Apariciones frente a CVindex (filtro de -1 aplicado)')
 x <- unique(data_filtered$CVTOT)
 y <- data_filtered$GB.Seqs
 ```
@@ -349,7 +357,7 @@ abline(lm(GB.Seqs~ CVTOT, data=data_filtered),col="red", lty=2, lwd = 2)
 legend("topright",leg, col=c(colores[(L-1):1],"tomato","red"), lty=c(rep(1,L),2), inset=0.025,lwd = 2)
 ```
 
-Los resultados son bastante esperables sobretodo teniendo en cuenta la cantidad de 0's que tienen los datos de partida. Como se puede ver salvo para casos de cuantiles muy extremos 0.05-0.95 o 0.1-0.9, no se ve una pendiente significativa.
+Los resultados son bastante esperables sobre todo teniendo en cuenta la cantidad de 0's que tienen los datos de partida. Como se puede ver salvo para casos de cuantiles muy extremos 0.05-0.95 o 0.1-0.9, no se ve una pendiente significativa.
 
 ## Análisis no paramétricos
 
@@ -486,7 +494,7 @@ for (a in l_a){
 }
 ```
 
-  * P-Splines - los resultados de la evaluación del modelo vía gam.check demuestran que no es viable el P-spline pues no se cumplen las hipótesis de partida ni con imaginación, además en la mayor parte de casos el valor de k se encuentra extrañamente infraestimado (lo que no creo que sea una buena noticia)
+  * P-Splines - los resultados de la evaluación del modelo vía gam.check demuestran que no es viable el P-spline pues no se cumplen las hipótesis de partida, además en la mayor parte de casos el valor de k se encuentra extrañamente infraestimado.
   
 ```{r,include = FALSE, echo = FALSE,warning=FALSE }
 # Selección de la dimensión de la base y base a emplear:
@@ -518,7 +526,7 @@ for (a in l_a){
 # o casi
 ```
   
-  Por probar.
+  Simplemente para ver como sería el ajuste, pese a que este tipo de modelos creo que ya deberían quedar descartados.
   
 ```{r warning=FALSE}
 l_a <- c(0.0, 0.025,0.05)
@@ -547,9 +555,10 @@ for (a in l_a){
 
 ## Regresión logística: paramétrica y no paramétrica.
 
-A la vista de lo comentado por Antón en la reunión donde se dijo que el haplotipo determinaba el número de veces que un genoma era secuenciado. Es obvio por tanto que el número de apariciones en GenBank estará altamente correlado con mayor número de secuenciaciones. Por tanto, es probable que la magnitud de las ocurrencias en GenBank pueda no ser relevante y únicamente lo sea si aparece o no (discretizamos la variable GB.Seqs).
+Tras lo comentado acerca de las diferencias entre el número de secuenciaciones asociadas a los distintos haplotipos es obvio que el número de apariciones en GenBank dependerá en gran medida del haplotipo que al que pertenezca la mutación. Por tanto, es probable que la magnitud de las ocurrencias en GenBank pueda no ser relevante y únicamente lo sea si aparece o no. En base a esta idea se plantea discretizar la variable GB.Seqs y ajustar tres modelos: regresión logística clásica, regresión logística local y loess.
+
   * Opción A: poner a 1 si Apariciones > 0
-  * Opción B: poner a 1 si Apariciones > filtro, con filtro > 1, a la vista de los resultados del histograma no parece sensato dado que eliminaríamos cerca del 95% de la información.
+  * Opción B: poner a 1 si Apariciones > filtro, con filtro > 1, a la vista de los resultados del histograma no parece sensato dado que eliminaríamos la mayor parte de la información y nos quedaríamos con muy pocos datos para hacer la regresión.
 
 ```{r warning=FALSE}
 par(c(1,3))
