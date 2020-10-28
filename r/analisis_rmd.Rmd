@@ -31,6 +31,7 @@ library(quantreg)
 library(splines)
 library(mgcv)
 library(sm)
+require(arules)
 ```
 
 Carga y preprocesamiento de los datos.
@@ -201,7 +202,7 @@ for (a in l_a)
   summary(data_tmp$GB.Seqs.log)
   #windows()
   plot(data_tmp$CVTOT, data_tmp$GB.Seqs.log, col = "blue",
-       xlab = "CvTot",ylab = "log(Appearances) + 1", main = paste("Log appearances, ",a))
+       xlab = "CvTot",ylab = "log(Appearances + 1)", main = paste("Log appearances, ",a))
   lines(x,log(Pr_inf_sP_c1+1),col="blue",type="l",lty =1, lwd = 2)
   lines(x,log(Pr_inf_sP_c2+1),col="blue",type="l",lty = 2, lwd = 2)
   lines(x,log(Pr_inf_sP_c3+1),col="blue",type="l",lty = 3, lwd = 2)
@@ -364,7 +365,7 @@ Los resultados son bastante esperables sobre todo teniendo en cuenta la cantidad
 Análisis via curvas spline:
 
 ```{r warning=FALSE}
-splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT, type = 'regular') {
+splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT,columnay = 'Apariciones', type = 'regular') {
   x_l <- DataSub[,columna_x]
   y_l <- DataSub[,columna_y]
   if (type == 'b' || type == 'p'){
@@ -425,12 +426,12 @@ splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT, type 
 	} 
 	Lower<-2*Main-apply(Estim,1,quantile,probs=1-alpha/2)
 	Upper<-2*Main-apply(Estim,1,quantile,probs=alpha/2)
-	plot(x_l,y_l,pch=16,col="blue",ylim=c(0,6),xlab="CvIndex",ylab="log(Appearances + 1)",
+	plot(x_l,y_l,pch=16,col="blue",ylim=c(min(y_l),max(y_l)),xlab="CvIndex",ylab=columnay,
 		main=mainT)
 	lines(Grid,Main,col="red",lwd=2)
 	lines(Grid,Lower,col="red",lty=2)
 	lines(Grid,Upper,col="red",lty=2)
-	plot(Grid,Main,col="red",type="l",lwd=2,ylim = c(0,max(Upper)),xlab="CvIndex",ylab="log(Appearances + 1)")
+	plot(Grid,Main,col="red",type="l",lwd=2,ylim = c(min(Lower),max(Upper)),xlab="CvIndex",ylab=columnay)
 	lines(Grid,Lower,col="red",lty=2)
 	lines(Grid,Upper,col="red",lty=2)
 	return(spl)}
@@ -462,7 +463,8 @@ for (a in l_a)
   par(mfrow=c(1,2))
   for (df in dfs)
   {
-    splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,300,0.025,1000,paste("Smoothing Spline Regression ",df,'(dfs) Filtro = ',a,' Alpha(IC): ',0.05))
+    splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,300,0.025,1000,paste("Smoothing Spline Regression ",df,'(dfs) Filtro = ',a), columnay = 'Log(Apariciones +1)')
+    #splines_adjust(data_tmp, 'GB.Seqs', 'CVTOT', df,300,0.025,1000,paste("Smoothing Spline Regression ",df,'(dfs) Filtro = ',a), columnay = 'Apariciones')
   }
 }
 ```
@@ -488,7 +490,7 @@ for (a in l_a){
   i <- 1
   for (df in dfs)
   {
-    spls[i] <- splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,6,0.5,1000,paste("B-Spline Regression ",df,'(dfs) alpha = ',a), type = 'b')
+    spls[i] <- splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,6,0.5,1000,paste("B-Spline Regression ",df,'(dfs) alpha = ',a), type = 'b', columnay = 'Log(Apariciones+1)')
     i <- i + 1
   }
 }
@@ -599,3 +601,74 @@ legend("topright", c("Logistica","Loess","Logistica Local"),lty=c(1,1,1),col=c('
 ```
 
 A la vista de los resultados parece lógico decir que la regresión logística clásica obvia la caída final de probabilidad, pero por otro lado parece correlar en gran medida con los visto para los ajustes no paramétricos tipo, spline.
+
+## 25/10/2020 - Comentado con Antón.
+
+A la vista de los resultados provistos se ve un comportamiento contraintuitivo o irregular de los CVindex en relación a las apariciones en genBank. Lo esperable es que a medida que el índice de conservación se incremente (cvindex 1.0 indica sobre un 60-80% de conservación en la base bajo estudio) el número de variaciones asociadas a dicho índice caiga. Pero en base a lo visto en los ajustes parece que este comportamiento no se asegura entre 0-1 donde a medida que el índice de conservación sube también lo hace la probabilidad de variación (ajuste dicotómico) o el número de variaciones (ajustes no paramétricos). 
+Propuesto:
+  
+  * Construcción de histogramas en rangos de 0.5.
+  * Análisis univariante de los CVTOT para Apariciones = 0.
+  
+```{r}
+length_data_apar <- sum(data_filtered$GB.Seqs > 0);length_data_apar
+length_data_0 <- sum(data_filtered$GB.Seqs == 0);length_data_0
+total_pos_variantes <- length(unique(data_filtered$Genomic))-1;total_pos_variantes
+length_data_apar/total_pos_variantes
+```
+  
+Como primer detalle indicar que según se ver existen:
+
+  * 688 valores de CVindex con un número de apariciones > 0, estas distribuidas entorno a 563 de las 1599 posiciones de la componente LSU rRNA, de donde salen 1.22 variantes por posición con variación.
+  * 2340 valores de CVindex con un número de apariciones == 0.
+
+Pasamos a ver como se distribuyen los CVIndex para Apariciones = 0, y como se distribuyen los datos cuando el número de apariciones es > 0:
+
+```{r}
+par(mfrow = c(2,2))
+data_0_apar <- data_filtered$CVTOT[data_filtered$GB.Seqs == 0]
+labels <- c(-1,-0.5,0,0.5,1,1.5,2)
+h <- hist(data_0_apar, breaks = 'fd', freq = T, xlab = 'CVIndex', main = 'Histograma CVIndex (Apariciones = 0)')
+barplot(h$counts/nrow(data_filtered),names = h$mids,main = 'Histograma CVIndex (Apariciones = 0)/Total posiciones' )
+
+data_1_apar <- data_filtered$CVTOT[data_filtered$GB.Seqs > 0]
+h <- hist(data_1_apar, breaks = 'fd', freq = T, xlab = 'CVIndex', main = 'Histograma CVIndex (Apariciones > 0)')
+barplot(h$counts/nrow(data_filtered),names = h$mids,main = 'Histograma CVIndex (Apariciones > 0)/Total posiciones' )
+```
+
+Los resultados me dejan algo confuso, dado que da la sensación de que el comportamiento es el opuesto al esperado.  
+  
+  * El gráfico de Apariciones = 0 indica que el número de ocurrencias en GenBank es alto para valores bajos del CVIndex, mientras que para valores altos es bajo. Cosa que va en contra de lo esperado dado que las regiones de CVIndex alto debería implicar altos niveles de conservación (1:1.5 implica conservación entorno 40-60%)
+  * El histograma de Apariciones > 0 muestra dos crecimientos inexplicables entorno al 0:0.5 y nuevamente entorno al valor 2.0, cosa que nuevamente contraviene el comportamiento esperado.
+
+```{r}
+breaks <- seq(-1, 2, by = 0.25)
+# Histogramas
+log.apariciones <- numeric(length(breaks)-1)
+log.apariciones.norm <- numeric(length(breaks)-1)
+apariciones <- numeric(length(breaks) - 1)
+apariciones.norm <- numeric(length(breaks)-1)
+count.apariciones <- numeric(length(breaks) - 1)
+count.apariciones.norm <- numeric(length(breaks) - 1)
+for (i in seq(length(breaks)-1))
+{
+  log.apariciones[i] <- sum(data_filtered$Log.GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])
+  log.apariciones.norm[i] <- sum(data_filtered$Log.GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length_data_apar
+  apariciones[i] <- sum(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])
+  apariciones.norm[i] <- sum(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length_data_apar
+  count.apariciones[i] <- length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1] & data_filtered$GB.Seqs > 0])
+  count.apariciones.norm[i] <- length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1] & data_filtered$GB.Seqs > 0])/length_data_apar
+}
+par(mfrow = c(2,3))
+barplot(apariciones, names = breaks[1:length(breaks)-1], ylab = 'Total Variaciones Registradas', xlab = 'CVIndex', col = "#69b3a2")
+barplot(log.apariciones, names =  breaks[1:length(breaks)-1], ylab = 'Total Log(Variaciones Registradas)', xlab = 'CVIndex', col = "#69b3a2")
+barplot(count.apariciones, names =  breaks[1:length(breaks)-1], ylab = 'Number of CVIndex variations', xlab = 'CVIndex', col = "#69b3a2")
+barplot(apariciones.norm, names =  breaks[1:length(breaks)-1], ylab = 'Total Variaciones Registradas / #Places with variations', xlab = 'CVIndex', col = "#69b3a2")
+barplot(log.apariciones.norm, names =  breaks[1:length(breaks)-1], ylab = 'Log(Variaciones Registradas)/ #Places with variations', xlab = 'CVIndex', col = "#69b3a2")
+barplot(count.apariciones.norm, names =  breaks[1:length(breaks)-1], ylab = '#CVIndex variations/# Places with variation', xlab = 'CVIndex', col = "#69b3a2")
+```
+
+Obviamente el primero de los gráficos muestra un pico enorme entre 0:0.5 pero este es debido a las variaciones de la posición 2706 que toma valor 40793, por tanto no es demasiado esclarecedor. Por otro lado, tanto el segundo como el tercero muestran casos muy parecidos. En el segundo gráfico se está usando escala logarítimica y en el tercero es la cuenta de casos con variaciones sin atender al número de estas.
+
+
+

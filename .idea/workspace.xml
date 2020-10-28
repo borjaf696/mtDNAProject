@@ -19,12 +19,16 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="Nuevos análisis - eliminación de los -1's y procesamiento univariante, incluimos la Binomial Negativa como función de enlace para ajustes glm, repetimos los análisis via gamlss (Poisson, Bi, Bi2, Sichel, Zip, Zip2) con lineal, cuadrático y splines cúbicos.">
-      <change afterPath="$PROJECT_DIR$/.idea/rMarkdownGraphicsSettings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" afterDir="false" />
+    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- Cambio 26/20/2020">
+      <change afterPath="$PROJECT_DIR$/Conclusions" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/r/analisis_rmd.pdf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/Script_try_2.R" beforeDir="false" afterPath="$PROJECT_DIR$/r/Script_try_2.R" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TODO" beforeDir="false" afterPath="$PROJECT_DIR$/TODO" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/lsu_df.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/lsu_df.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/Script_try_2.R" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.Rmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/r_script.R" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mtDNA.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/mtDNA.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,7 +56,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="settings.editor.selected.configurable" value="org.jetbrains.r.configuration.RSettingsProjectConfigurable" />
+    <property name="settings.editor.selected.configurable" value="preferences.fileTypes" />
   </component>
   <component name="RunManager">
     <configuration name="mtDNA" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -98,7 +102,7 @@
       <workItem from="1602150499889" duration="23881000" />
       <workItem from="1602531747684" duration="7669000" />
       <workItem from="1602651095646" duration="18393000" />
-      <workItem from="1602784485850" duration="19013000" />
+      <workItem from="1602784485850" duration="32188000" />
     </task>
     <task id="LOCAL-00001" summary="Commit with RScript">
       <created>1602651262101</created>
@@ -114,7 +118,42 @@
       <option name="project" value="LOCAL" />
       <updated>1602948785190</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Cambio a RMD - incluímos suavización spline básica con 5 grados de libertad diferentes (de 2 a 10) y el análisis sigue la misma política que hasta el momento (filtro por alpha de outliers)">
+      <created>1603260760202</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1603260760202</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Análisis finales - incluímos splines, B-splines, P-Splines y ajustes locales (logístico, loess)">
+      <created>1603376892240</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1603376892240</updated>
+    </task>
+    <task id="LOCAL-00005" summary="...">
+      <created>1603443472579</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1603443472579</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Version 1.0">
+      <created>1603531696616</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1603531696616</updated>
+    </task>
+    <task id="LOCAL-00007" summary="- Cambio 26/20/2020">
+      <created>1603726312862</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1603726312863</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -135,39 +174,48 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Commit with RScript" />
     <MESSAGE value="Nuevos análisis - eliminación de los -1's y procesamiento univariante, incluimos la Binomial Negativa como función de enlace para ajustes glm, repetimos los análisis via gamlss (Poisson, Bi, Bi2, Sichel, Zip, Zip2) con lineal, cuadrático y splines cúbicos." />
-    <option name="LAST_COMMIT_MESSAGE" value="Nuevos análisis - eliminación de los -1's y procesamiento univariante, incluimos la Binomial Negativa como función de enlace para ajustes glm, repetimos los análisis via gamlss (Poisson, Bi, Bi2, Sichel, Zip, Zip2) con lineal, cuadrático y splines cúbicos." />
+    <MESSAGE value="Cambio a RMD - incluímos suavización spline básica con 5 grados de libertad diferentes (de 2 a 10) y el análisis sigue la misma política que hasta el momento (filtro por alpha de outliers)" />
+    <MESSAGE value="Análisis finales - incluímos splines, B-splines, P-Splines y ajustes locales (logístico, loess)" />
+    <MESSAGE value="..." />
+    <MESSAGE value="Version 1.0" />
+    <MESSAGE value="- Cambio 26/20/2020" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Cambio 26/20/2020" />
   </component>
   <component name="WindowStateProjectService">
     <state x="827" y="121" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1602272934236">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="827" y="121" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1602272934236" />
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1602784475433">
+    <state x="729" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1603910084574">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602784475433" />
-    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1602784475433">
+    <state x="729" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1603910084574" />
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1603886245740">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602784475433" />
-    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1602784475433">
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1603886245740" />
+    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1603886245739">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602784475433" />
-    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1602784475433">
+    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1603886245739" />
+    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1603886245739">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602784475433" />
-    <state x="361" y="165" key="SettingsEditor" timestamp="1602150560996">
+    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1603886245739" />
+    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1603886245739">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="361" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1602150560996" />
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1602948829136">
+    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1603886245739" />
+    <state x="361" y="165" key="SettingsEditor" timestamp="1603910167655">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1602948829136" />
+    <state x="361" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1603910167655" />
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1603726316900">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1603726316900" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/mtDNAProject$mtDNA.coverage" NAME="mtDNA Coverage Results" MODIFIED="1602783836820" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/mtDNAProject$mtDNA.coverage" NAME="mtDNA Coverage Results" MODIFIED="1603886245735" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
 </project>

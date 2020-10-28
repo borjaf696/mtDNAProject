@@ -29,24 +29,25 @@ def add_cv(df_section, df_control):
     Method to add cv:
         * Column: Genomic
     '''
-    df_agg = df_control.groupby('Genomic').first()
-    cvtot, cvmit, appearences, positions = [], [], [],[]
+    df_control.groupby('Genomic').first()
+    cvtot, cvmit, appearences, positions, genomic = [], [], [], [], []
     for index, row in df_control.iterrows():
         genomic_pos = row['Genomic']
         df_tmp = df_section.loc[df_section['Position'] == genomic_pos]
         for i2, r2 in df_tmp.iterrows():
             cvtot.append(row['CVTOT'])
             cvmit.append(row['CVMIT'])
-            appearences.append(r2['GB Seqs'])
-            positions.append(r2['Position'])
+            appearences.append(max(r2['GB Seqs'], r2['Curated References']))
+            positions.append(row['position'])
+            genomic.append(genomic_pos)
         if df_tmp.empty:
             cvtot.append(row['CVTOT'])
             cvmit.append(row['CVMIT'])
             appearences.append(0)
             positions.append(row['position'])
-    return pd.DataFrame({'Position':positions,'CVTOT':cvtot, 'CVMIT':cvmit,'GB Seqs':appearences})
-    df_tmp = df_control.loc[~df_control.Genomic.isin(df_agg.index)]
-    new_pot_df = {'Position':[],'GB Seqs':[],'Mutated':[],'Reference Base':[],'CVTOT':[],'CVMIT':[]}
+            genomic.append(-1)
+    return pd.DataFrame({'Position':positions,'CVTOT':cvtot,
+                         'CVMIT':cvmit,'GB Seqs':appearences,'Genomic':genomic})
 
 if __name__ == '__main__':
     mitomap, tsv_read = [], False
