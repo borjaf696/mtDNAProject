@@ -1,1 +1,1 @@
-# Predictive analýsis of mtDNA variations
+# Predictive analysis of mtDNA variations
