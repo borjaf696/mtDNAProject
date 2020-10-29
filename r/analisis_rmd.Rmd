@@ -670,5 +670,24 @@ barplot(count.apariciones.norm, names =  breaks[1:length(breaks)-1], ylab = '#CV
 
 Obviamente el primero de los gráficos muestra un pico enorme entre 0:0.5 pero este es debido a las variaciones de la posición 2706 que toma valor 40793, por tanto no es demasiado esclarecedor. Por otro lado, tanto el segundo como el tercero muestran casos muy parecidos. En el segundo gráfico se está usando escala logarítimica y en el tercero es la cuenta de casos con variaciones sin atender al número de estas.
 
+#### 29/10/2020
 
+En base a lo comentado por Antón resulta algo complejo la comparación de los distintos histogramas obtenidos y entonces es interesante hacerlos comparables. El problema surge de que en cada bloque, región o intervalo se ubica un número diferente de residuos y por tanto el primer histograma no es del todo comparable. Por otro lado, el histograma número 3 ofrece el número de residuos pero deja de lado totalmente el número de repeticiones de estos lo que tampoco es "justo". La idea mostrar la media de variaciones por residuo en cada uno de los intervalos.
+
+```{r}
+breaks <- seq(-1, 2, by = 0.25)
+# Histogramas
+apariciones.media <- numeric(length(breaks)-1)
+log.apariciones.media <- numeric(length(breaks) - 1)
+for (i in seq(length(breaks)-1))
+{
+  apariciones.media[i] <- sum(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1] & data_filtered$GB.Seqs > 0])
+  log.apariciones.media[i] <- sum(data_filtered$Log.GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1] & data_filtered$GB.Seqs > 0])
+}
+par(mfrow=c(1,2))
+barplot(apariciones.media, names = breaks[1:length(breaks)-1], ylab = 'Media Variaciones Registradas', xlab = 'CVIndex', col = "#69b3a2")
+barplot(log.apariciones.media, names = breaks[1:length(breaks)-1], ylab = 'Media Log Variaciones por intervalo', xlab = 'CVIndex', col = "#69b3a2")
+```
+
+Los resultados de las medias de variaciones por intervalo se ven extremadamente sesgadas por el número de variaciones que presentan ciertos residuos (máximo de apariciones se encuentra en ~40000) por lo que la gráfica parece me poco realista (¿hay ~40000 por que el haplogrupo al que pertenece ha sido extremadamente secuenciado o por que es una variación altamente registrada?). Por otro lado, el gráfico de las medias de las log variaciones muestra un comportamiento mucho más cercano al esperado para valores de CVIndex más bajos se obtienen unas medias más altas (menor índice de conservación, implica por tanto mayor número de variantes) y una caída paulatina (con un ligero repunte entorno al 1.0) hasta los valores más altos (parece que tratar con el logaritmo de las apariciones aproxima correctamente el comportamiento esperado).
 
