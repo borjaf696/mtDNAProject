@@ -7,23 +7,22 @@ The src folder contains a script to preprocess both control and MitoMap data to 
 ## Analysis
 
 We have focused on 2 different types of regression models:
-        
-        1. Parametric:
-            - Poisson
-            - Zero inflated poisson
-                * Geometric
-                * Poisson
-                * Binomial negative
-            - PIG or Poisson Inverse Gaussian
-            - SICHEL
-            - DEL or Delaport
-            - Logistic
-        2. Non Parametric:
-            - Spline curves
-                * B-splines
-                * Smoothing splines
-                * P-splines
-            - Loess
-            - Local Logistic regression
+1. Parametric:
+    - Poisson
+    - Zero inflated poisson
+        * Geometric
+        * Poisson
+        * Binomial negative
+    - PIG or Poisson Inverse Gaussian
+    - SICHEL
+    - DEL or Delaport
+    - Logistic
+2. Non Parametric:
+    - Spline curves
+        * B-splines
+        * Smoothing splines
+        * P-splines
+    - Loess
+    - Local Logistic regression
  
- All these analysis are gathered in r/analisis_rmd.Rmd
+ All these analysis can be found in r/analisis_rmd.Rmd

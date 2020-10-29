@@ -19,11 +19,9 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- Cambios 27/10/2020 - modificación de los GenBank appearences">
-      <change beforePath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" afterDir="false" />
+    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- Cambios 29/10/2020 &#10;- Añadido de media de variaciones (incluyendo versión logarítmica)&#10;- Cambios README.md">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.Rmd" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +95,7 @@
       <workItem from="1602150499889" duration="23881000" />
       <workItem from="1602531747684" duration="7669000" />
       <workItem from="1602651095646" duration="18393000" />
-      <workItem from="1602784485850" duration="34152000" />
+      <workItem from="1602784485850" duration="34329000" />
     </task>
     <task id="LOCAL-00001" summary="Commit with RScript">
       <created>1602651262101</created>
@@ -155,7 +153,14 @@
       <option name="project" value="LOCAL" />
       <updated>1603910219978</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="- Cambios 29/10/2020 &#10;- Añadido de media de variaciones (incluyendo versión logarítmica)&#10;- Cambios README.md">
+      <created>1603963348733</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1603963348733</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -182,7 +187,8 @@
     <MESSAGE value="Version 1.0" />
     <MESSAGE value="- Cambio 26/20/2020" />
     <MESSAGE value="- Cambios 27/10/2020 - modificación de los GenBank appearences" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Cambios 27/10/2020 - modificación de los GenBank appearences" />
+    <MESSAGE value="- Cambios 29/10/2020 &#10;- Añadido de media de variaciones (incluyendo versión logarítmica)&#10;- Cambios README.md" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Cambios 29/10/2020 &#10;- Añadido de media de variaciones (incluyendo versión logarítmica)&#10;- Cambios README.md" />
   </component>
   <component name="WindowStateProjectService">
     <state x="827" y="121" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1602272934236">
@@ -213,10 +219,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="361" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1603910167655" />
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1603910223037">
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1603963355541">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1603910223037" />
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1603963355541" />
     <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1603962380008">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
