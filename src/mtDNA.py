@@ -4,7 +4,7 @@ import pandas as pd
 from utils.utils import *
 import urllib.request
 
-control_lsu = '../control/DV-gen-LSU.csv'
+control_lsu, haplogrupos_control = '../control/DV-gen-LSU.csv', '../control/haplogrupos.tsv'
 
 def preprocess_df(df):
     '''
@@ -58,41 +58,56 @@ Obtención de haplogrupos para cada una de las secuencias:
     * Parseo del html
     * mkdir htmls_haplogrupos
 '''
-def get_haplogroups(df, suffix = 'lsu'):
+def get_haplogroups(df, suffix = 'lsu', df_haplogroups = None):
     '''
     :param df: dataframe with information to build the query
     :return: same dataframe with new columns counting the number of times each haplogroup appears
     base query = https://www.mitomap.org/cgi-bin/index_mitomap.cgi?title=Coding+Polymorphism+G-A+at+rCRS+position+2701&pos=2701&ref=G&alt=A&purge_type=
     '''
+    assert df_haplogroups is not None
+    haplogrupos = df_haplogrupos['Top Level Haplogroup'].values
     base_query = 'https://www.mitomap.org/cgi-bin/index_mitomap.cgi?title=Coding+Polymorphism+\-\+at+rCRS+position+\&pos=\&ref=\&alt=\&purge_type='
     base_query_split = base_query.split('\\')
     dir_htmls = '../mitomap_html_dirs_'+suffix+'/'
     if not Utils.exists(dir_htmls):
         Utils.mkdir(dir_htmls)
     files = Utils.get_files(dir_htmls,extension=['html'])
-    haplogroup_column = []
+    haplogroups_dict = {i:np.zeros(len(df.index)) for i in haplogrupos}
+    columna_new_seqs = {'Nb.Seqs.correction':np.zeros(len(df.index))}
+    df = pd.concat([df,pd.DataFrame(haplogroups_dict)], axis = 1)
+    df = pd.concat([df, pd.DataFrame(columna_new_seqs)], axis = 1)
+    print('Haplogroups dataframe columns: ', df_haplogroups.columns.values)
+    print('LSU dataframe columns: ',df.columns.values)
     if not len(files) != 0:
         print('Retrieving haplogroup information from MitoMap')
 
         cols = ['Position', 'Mutated Base','Reference Base']
         for index, row in df.iterrows():
-            data = (str(row[cols[0]]), str(row[cols[1]]), str(row[cols[2]]))
+            data = (str(int(row[cols[0]])), str(row[cols[1]]), str(row[cols[2]]))
             custom_query = ''.join(base_query_split[0]+data[2]+base_query_split[1]+
                                    data[1]+base_query_split[2]+data[0]+base_query_split[3]+data[0]
                                    +base_query_split[4] + data[2]+base_query_split[5]+data[1]+base_query_split[6])
             fp = urllib.request.urlopen(custom_query)
+            print("Query: ",custom_query)
             mybytes = fp.read()
             my_web_page = mybytes.decode("utf8")
             fp.close()
             html_file = 'haplogroups_'+str(index)+'.html'
             with open(dir_htmls+html_file,'w+') as f:
                 f.write(my_web_page)
-            haplogroups = [my_web_page[m.end(0):m.end(0)+1] if my_web_page[m.end(0)] != 'L' else my_web_page[m.end(0):m.end(0)+2]
-                   for m in re.finditer('haplogroup=', my_web_page)]
-            haplogroup_column.append(haplogroups)
+            haplogroups = [my_web_page[m.end(0):m.end(0)+2] if my_web_page[m.end(0)] == 'H' and my_web_page[m.end(0)+1] == 'V' else my_web_page[m.end(0):m.end(0)+1]
+                if my_web_page[m.end(0)] != 'L' else my_web_page[m.end(0):m.end(0)+2] for m in re.finditer('haplogroup=', my_web_page)]
+            key_change = str(data[0]+data[1])
+            print(key_change)
+            for haplogroup in haplogroups:
+                set_positions = set([i.strip() for i in df_haplogroups.loc[haplogroup]['Ancestral Marker Motif †'].strip().split(',')])
+                if key_change in set_positions:
+                    print('change')
+                    df.at[index,'Nb.Seqs.correction'] += 1
+                df.at[index,haplogroup] += 1
     else:
         print('Assuming information already available')
-    df['haplogroups'] = haplogroup_column
+    df.to_csv('../output/lsu_haplogroups.csv')
 
 if __name__ == '__main__':
     #pd.set_option('display.max_rows', None)
@@ -101,6 +116,8 @@ if __name__ == '__main__':
     df_control_lsu = pd.read_csv(control_lsu, sep = ';')
     df_control_lsu['Genomic'] = pd.to_numeric(df_control_lsu['Genomic'].fillna(-1))
     print(df_control_lsu)
+    df_haplogrupos = pd.read_csv(haplogrupos_control, sep = '\t')
+    df_haplogrupos_indexed = df_haplogrupos.set_index('Top Level Haplogroup')
     for i in sys.argv:
         if tsv_read:
             mitomap = i.strip().split(',')
@@ -121,7 +138,7 @@ if __name__ == '__main__':
         # Process lsu
         preprocess_df(lsu_df)
         # Getting haplogroups
-        get_haplogroups(lsu_df)
+        get_haplogroups(lsu_df, df_haplogroups = df_haplogrupos_indexed)
         results_df = add_cv(lsu_df, df_control_lsu)
         results_df.to_csv('../output/lsu_df.csv')
         print('LSU MitoMap information: ', results_df)
