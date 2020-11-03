@@ -26,30 +26,33 @@ def preprocess_df(df):
         frequencies.append(float(i[:-1]))
     df['GB Freq‡'] = frequencies
 
-def add_cv(df_section, df_control):
+def add_cv(df_section, df_control, haplogroups = None):
     '''
     Method to add cv:
         * Column: Genomic
     '''
     df_control.groupby('Genomic').first()
-    cvtot, cvmit, appearences, positions, genomic = [], [], [], [], []
+    cvtot, cvmit, appearences, positions, genomic, corrected_appearences, cells_haplogroups = [], [], [], [], [], [], []
     for index, row in df_control.iterrows():
         genomic_pos = row['Genomic']
         df_tmp = df_section.loc[df_section['Position'] == genomic_pos]
         for i2, r2 in df_tmp.iterrows():
             cvtot.append(row['CVTOT'])
-            cvmit.append(row['CVMIT'])
             appearences.append(max(r2['GB Seqs'], r2['Curated References']))
-            positions.append(row['position'])
+            corrected_appearences.append(max(r2['GB Seqs'] - r2['Nb.Seqs.correction'], r2['Curated References']))
             genomic.append(genomic_pos)
-        if df_tmp.empty:
+            cells_haplogroups.append(r2[haplogroups])
+        if df_tmp.empty and genomic_pos != -1:
             cvtot.append(row['CVTOT'])
-            cvmit.append(row['CVMIT'])
             appearences.append(0)
-            positions.append(row['position'])
-            genomic.append(-1)
-    return pd.DataFrame({'Position':positions,'CVTOT':cvtot,
-                         'CVMIT':cvmit,'GB Seqs':appearences,'Genomic':genomic})
+            corrected_appearences.append(0)
+            genomic.append(genomic_pos)
+            cells_haplogroups.append(np.zeros(len(haplogroups)))
+    df_result = pd.DataFrame({'CVTOT':cvtot,'GB Seqs':appearences,'GB.Seqs.Corrected':corrected_appearences,'Genomic':genomic})
+    if haplogroups is not None:
+        return pd.concat([df_result, pd.DataFrame(data = cells_haplogroups, columns = haplogroups)], axis = 1)
+    else:
+        return df_result
 
 '''
 Obtención de haplogrupos para cada una de las secuencias:
@@ -107,7 +110,9 @@ def get_haplogroups(df, suffix = 'lsu', df_haplogroups = None):
                 df.at[index,haplogroup] += 1
     else:
         print('Assuming information already available')
+        df = pd.read_csv('../output/lsu_haplogroups.csv', sep = ',')
     df.to_csv('../output/lsu_haplogroups.csv')
+    return df, haplogrupos
 
 if __name__ == '__main__':
     #pd.set_option('display.max_rows', None)
@@ -138,7 +143,7 @@ if __name__ == '__main__':
         # Process lsu
         preprocess_df(lsu_df)
         # Getting haplogroups
-        get_haplogroups(lsu_df, df_haplogroups = df_haplogrupos_indexed)
-        results_df = add_cv(lsu_df, df_control_lsu)
+        lsu_df, haplogroups = get_haplogroups(lsu_df, df_haplogroups = df_haplogrupos_indexed)
+        results_df = add_cv(lsu_df, df_control_lsu, haplogroups)
         results_df.to_csv('../output/lsu_df.csv')
         print('LSU MitoMap information: ', results_df)
