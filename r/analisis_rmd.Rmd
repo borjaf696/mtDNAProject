@@ -4,7 +4,7 @@ author: "Borja Freire Castro"
 date: "23/10/2020"
 output:
   html_document:
-    fig_width: 7
+    fig_width: 10
     fig_height: 6
 ---
 
@@ -27,10 +27,10 @@ require(gamlss.dist)
 require(locfit)
 require(KernSmooth)
 require(MASS)
-library(quantreg)
-library(splines)
-library(mgcv)
-library(sm)
+require(quantreg)
+require(splines)
+require(mgcv)
+require(sm)
 require(arules)
 ```
 
@@ -44,6 +44,9 @@ dim(data)
 head(data)
 data$CVTOT <- as.numeric(as.character(data$CVTOT))
 data$GB.Seqs <- na.omit(as.numeric(as.character(data$GB.Seqs)))
+data$GB.Seqs.Corrected <- na.omit(as.numeric(as.character(data$GB.Seqs.Corrected)))
+# Corregimos el impacto del haplogrupo:
+data$GB.Seqs <- data$GB.Seqs.Corrected
 data$Log.GB.Seqs <- log(data$GB.Seqs + 1)
 data$Bin.GB.Seqs <- numeric(length(data$GB.Seqs))
 data <- na.omit(data)
@@ -235,7 +238,7 @@ for (a in l_a){
     data_tmp <- data_filtered}
   ## Estudio de las distribuciones
   #windows()
-  op <- par(mfrow = c(2, 3))
+  op <- par(mfrow = c(2, 4))
   dPO <- histDist(data_tmp$GB.Seqs, "PO",
                   main = "PO", trace = FALSE, xlim=c(0,20))     # Poisson
   dNBI <- histDist(data_tmp$GB.Seqs, "NBI",
@@ -248,8 +251,10 @@ for (a in l_a){
                    main = "ZIP", trace = FALSE, xlim=c(0,20))  # Zero inflated poisson
   dZIP2 <- histDist(data_tmp$GB.Seqs, "ZIP2",
                     main = "ZIP2", trace = FALSE, xlim=c(0,20)) # Zero inf. pois. 2
+  dDel <- histDist(data_tmp$GB.Seqs, "DEL",
+                    main = "DEL", trace = FALSE, xlim=c(0,20)) # Zero inf. pois. 2
   par(op)
-  AIC(dPO, dNBI, dPIG, dSI, dZIP, dZIP2)
+  print(AIC(dPO, dNBI, dPIG, dSI, dZIP, dZIP2, dDel))
 
   ## En base al AIC nos quedaríamos con dPIG que es un modelo de poisson pero descartariamos claramente los de ceros
   ## inflados.
@@ -279,7 +284,7 @@ for (a in l_a){
   print(unlist(m.q))
   print(unlist(m.s))
 
-  ## Igual que se visualizaba anteriormente, los mejores resultados vienen de SICHEL y de PIG (Igual
+  ## Igual que se visualizaba anteriormente, los mejores resultados vienen de PIG, DEL y SICHEL (Igual
   # a como ocurre en la versión de Manuel)
 
   # sigma.fo permite otorgar una formula para ajustar un modelo para el parámetro sigma (desviación)
@@ -293,19 +298,49 @@ for (a in l_a){
 
   # Nuevamente apenas hay mejoría.
   ## En cuanto al "mejor" modelo:
-  ##  PIG - Poisson Inverse Gaussian o SICHEL (no existen diferencias significativas en el AIC)
+  ##  DEL - pero desafortunadamente este resultado es bastante poco ajustado debido a que se fija unicamente a la zona inferior
+  ##  Ajustamos también PIG
   ##  El ajuste vía smoothing spline - aunque el ajuste por regresión polinómico local (grado 2)
   # tampoco queda descartado. - Nuevamente lo mismo que para Manuel.
 
   ## En base a esto vamos a evaluar los resultados via plot
   # Lineal + ajuste de sd
-  mL <- gamlss(GB.Seqs~CVTOT , data=na.omit(data_tmp), family =PIG,
+  mL <- gamlss(GB.Seqs~CVTOT , data=na.omit(data_tmp), family =DEL,
                sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
   # Cuadrático + ajuste de sd
-  mC <- gamlss(GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family =PIG,
+  mC <- gamlss(GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family =DEL,
                sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
   # Vía smoothing spline + ajuste de sd
-  mS <- gamlss(GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family =PIG,
+  mS <- gamlss(GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family =DEL,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+
+  # Obtenemos predicciones
+  mL.p <- predict(mL, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mC.p <- predict(mC, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mS.p <- predict(mS, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  # Ploteamos
+  #windows()
+  par(mfrow = c(1,1))
+  plot(data_tmp$CVTOT,data_tmp$GB.Seqs,pch=16,ylim=c(0,200), xlab="CVTOT",
+      ylab="Appearances",main=paste("Filtro: ",a))
+  lines(x,mL.p,col="red",type="l",lwd=2)
+  lines(x,mC.p,col="blue",type="l",lwd=2)
+  lines(x,mS.p,col="orange",type="l",lwd=2)
+  legend("topright", c("DEL.Lineal","DEL.Cuadrático","DEL.Splines"),
+         lty=c(2,2,2),col=c("red","blue","orange"), ncol=1, lwd=rep(2,3), inset = .05, cex=0.75)
+  
+  ## En base a esto vamos a evaluar los resultados via plot - PIG
+  # Lineal + ajuste de sd
+  mL <- gamlss(GB.Seqs~CVTOT , data=na.omit(data_tmp), family = PIG,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Cuadrático + ajuste de sd
+  mC <- gamlss(GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family = PIG,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Vía smoothing spline + ajuste de sd
+  mS <- gamlss(GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family = PIG,
                sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
 
   # Obtenemos predicciones
@@ -675,14 +710,14 @@ Obviamente el primero de los gráficos muestra un pico enorme entre 0:0.5 pero e
 En base a lo comentado por Antón resulta algo complejo la comparación de los distintos histogramas obtenidos y entonces es interesante hacerlos comparables. El problema surge de que en cada bloque, región o intervalo se ubica un número diferente de residuos y por tanto el primer histograma no es del todo comparable. Por otro lado, el histograma número 3 ofrece el número de residuos pero deja de lado totalmente el número de repeticiones de estos lo que tampoco es "justo". La idea mostrar la media de variaciones por residuo en cada uno de los intervalos.
 
 ```{r}
-breaks <- seq(-1, 2, by = 0.25)
+breaks <- seq(-1, 2, by = 0.125)
 # Histogramas
 apariciones.media <- numeric(length(breaks)-1)
 log.apariciones.media <- numeric(length(breaks) - 1)
 for (i in seq(length(breaks)-1))
 {
-  apariciones.media[i] <- sum(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1] & data_filtered$GB.Seqs > 0])
-  log.apariciones.media[i] <- sum(data_filtered$Log.GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1] & data_filtered$GB.Seqs > 0])
+  apariciones.media[i] <- sum(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])
+  log.apariciones.media[i] <- sum(data_filtered$Log.GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])
 }
 par(mfrow=c(1,2))
 barplot(apariciones.media, names = breaks[1:length(breaks)-1], ylab = 'Media Variaciones Registradas', xlab = 'CVIndex', col = "#69b3a2")
@@ -691,8 +726,8 @@ barplot(log.apariciones.media, names = breaks[1:length(breaks)-1], ylab = 'Media
 
 Los resultados de las medias de variaciones por intervalo se ven extremadamente sesgadas por el número de variaciones que presentan ciertos residuos (máximo de apariciones se encuentra en ~40000) por lo que la gráfica parece me poco realista (¿hay ~40000 por que el haplogrupo al que pertenece ha sido extremadamente secuenciado o por que es una variación altamente registrada?). Por otro lado, el gráfico de las medias de las log variaciones muestra un comportamiento mucho más cercano al esperado para valores de CVIndex más bajos se obtienen unas medias más altas (menor índice de conservación, implica por tanto mayor número de variantes) y una caída paulatina (con un ligero repunte entorno al 1.0) hasta los valores más altos (parece que tratar con el logaritmo de las apariciones aproxima correctamente el comportamiento esperado).
 
-## 30/10/2020 
+## 02/11/2020 
 
-Histograma del número de residuos por región del histograma (ojo con el pto de inicio).
+Variación asociada a un haplogrupo e individuo pertenece a dicho haplogrupo - eliminar (sacar las mismas gráficas) - Incorporado.
 
-Asociación de variantes a haplogrupos particulares.
+Cambiar la base de datos para coger solo de humano y quitar lo de EColi. Ya incorporado en los análisis superiores
