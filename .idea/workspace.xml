@@ -19,12 +19,11 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- Minor changes">
-      <change afterPath="$PROJECT_DIR$/r/analisis_rmd.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" afterDir="false" />
+    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- html">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/lsu_df.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/lsu_df.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TODO" beforeDir="false" afterPath="$PROJECT_DIR$/TODO" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/r/analisis_rmd.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.Rmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mtDNA.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/mtDNA.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +98,7 @@
       <workItem from="1602531747684" duration="7669000" />
       <workItem from="1602651095646" duration="18393000" />
       <workItem from="1602784485850" duration="34958000" />
-      <workItem from="1604127420689" duration="26816000" />
+      <workItem from="1604127420689" duration="29114000" />
     </task>
     <task id="LOCAL-00001" summary="Commit with RScript">
       <created>1602651262101</created>
@@ -192,7 +191,14 @@
       <option name="project" value="LOCAL" />
       <updated>1604394786578</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="- html">
+      <created>1604485636287</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1604485636287</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -224,7 +230,8 @@
     <MESSAGE value="- Haplogroups adding" />
     <MESSAGE value="- Haplogroups per variation&#10;- New columns in the output suggestion the correction based on haplogroups" />
     <MESSAGE value="- Minor changes" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Minor changes" />
+    <MESSAGE value="- html" />
+    <option name="LAST_COMMIT_MESSAGE" value="- html" />
   </component>
   <component name="WindowStateProjectService">
     <state x="512" y="158" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1604156668288">
@@ -271,10 +278,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="361" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1603910167655" />
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1604394790349">
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1604485641832">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1604394790349" />
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1604485641832" />
     <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1603962380008">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>

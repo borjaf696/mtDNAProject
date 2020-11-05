@@ -5,6 +5,7 @@ from utils.utils import *
 import urllib.request
 
 control_lsu, haplogrupos_control = '../control/DV-gen-LSU.csv', '../control/haplogrupos.tsv'
+control_ssu = '../control/DV-gen-SSU.csv'
 
 def preprocess_df(df):
     '''
@@ -121,6 +122,9 @@ if __name__ == '__main__':
     df_control_lsu = pd.read_csv(control_lsu, sep = ';')
     df_control_lsu['Genomic'] = pd.to_numeric(df_control_lsu['Genomic'].fillna(-1))
     print(df_control_lsu)
+    df_control_ssu = pd.read_csv(control_ssu, sep=';')
+    df_control_ssu['Genomic'] = pd.to_numeric(df_control_ssu['Genomic'].fillna(-1))
+    print(df_control_ssu)
     df_haplogrupos = pd.read_csv(haplogrupos_control, sep = '\t')
     df_haplogrupos_indexed = df_haplogrupos.set_index('Top Level Haplogroup')
     for i in sys.argv:
@@ -140,6 +144,10 @@ if __name__ == '__main__':
         # Process ssu
         preprocess_df(ssu_df)
         print('SSU MitoMap information: ',ssu_df)
+        ssu_df, haplogroups = get_haplogroups(ssu_df, df_haplogroups = df_haplogrupos_indexed)
+        results_df = add_cv(ssu_df, df_control_ssu, haplogroups)
+        results_df.to_csv('../output/ssu_df.csv')
+        print('SSU MitoMap information: ', results_df)
         # Process lsu
         preprocess_df(lsu_df)
         # Getting haplogroups

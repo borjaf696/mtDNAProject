@@ -221,7 +221,7 @@ for (a in l_a)
 }
 ```
 
-GAMLSS
+#### GAMLSS - Respuesta Apariciones
 
 ```{r}
 ## Modelos paramétricos via GAMLSS (Generalize Aditive models for location scale and shape)
@@ -354,6 +354,150 @@ for (a in l_a){
   #windows()
   par(mfrow = c(1,1))
   plot(data_tmp$CVTOT,data_tmp$GB.Seqs,pch=16,ylim=c(0,200), xlab="CVTOT",
+      ylab="Appearances",main=paste("Filtro: ",a))
+  lines(x,mL.p,col="red",type="l",lwd=2)
+  lines(x,mC.p,col="blue",type="l",lwd=2)
+  lines(x,mS.p,col="orange",type="l",lwd=2)
+  legend("topright", c("PIG.Lineal","PIG.Cuadrático","PIG.Splines"),
+         lty=c(2,2,2),col=c("red","blue","orange"), ncol=1, lwd=rep(2,3), inset = .05, cex=0.75)
+}
+```
+
+#### GAMLSS - Respuesta log(Apariciones+1)
+
+```{r}
+## Modelos paramétricos via GAMLSS (Generalize Aditive models for location scale and shape)
+l_a <- c(0.0)
+y <- data_filtered$Rounded.Log.GB.Seqs
+data_filtered$Rounded.Log.GB.Seqs <- as.numeric(floor(data_filtered$Rounded.Log.GB.Seqs))
+for (a in l_a){
+  # Eliminamos datos fuera de lugar
+  lower_bound <- quantile(y, 0.00);lower_bound
+  upper_bound <- quantile(y, 1 - a);upper_bound
+
+  outlier_ind <- which(y < lower_bound | y > upper_bound)
+  if (!is.na(outlier_ind[1])){
+    data_tmp <- data_filtered[-outlier_ind,]
+  }else{
+    data_tmp <- data_filtered}
+  ## Estudio de las distribuciones
+  #windows()
+  op <- par(mfrow = c(2, 4))
+  dPO <- histDist(data_tmp$Rounded.Log.GB.Seqs, "PO",
+                  main = "PO", trace = FALSE, xlim=c(0,20))     # Poisson
+  dNBI <- histDist(data_tmp$Rounded.Log.GB.Seqs, "NBI",
+                   main = "NBI", trace = FALSE,xlim=c(0,20))   # Binomial negativa tipo 1
+  dPIG <- histDist(data_tmp$Rounded.Log.GB.Seqs, "PIG",
+                   main = "PIG", trace = FALSE,xlim=c(0,20))   # Poisson inverse gaussian
+  dSI <- histDist(data_tmp$Rounded.Log.GB.Seqs, "SICHEL",
+                  main = "SICHEL", trace = FALSE, xlim=c(0,20)) # Sichel? Inverse Gaussian distribution
+  dZIP <- histDist(data_tmp$Rounded.Log.GB.Seqs, "ZIP",
+                   main = "ZIP", trace = FALSE, xlim=c(0,20))  # Zero inflated poisson
+  dZIP2 <- histDist(data_tmp$Rounded.Log.GB.Seqs, "ZIP2",
+                    main = "ZIP2", trace = FALSE, xlim=c(0,20)) # Zero inf. pois. 2
+  dDel <- histDist(data_tmp$Rounded.Log.GB.Seqs, "DEL",
+                    main = "DEL", trace = FALSE, xlim=c(0,20)) # Zero inf. pois. 2
+  par(op)
+  print(AIC(dPO, dNBI, dPIG, dSI, dZIP, dZIP2, dDel))
+
+  ## En base al AIC nos quedaríamos con dPIG que es un modelo de poisson pero descartariamos claramente los de ceros
+  ## inflados.
+
+  ## A través del ajuste de gamlss ajustamos distintos modelos con diferentes familias de funciones
+  ## Eliminapos PO, ZIP y ZIP2 dado que sus AIC están fuera de lugar en comparación a los otros 3
+  fam.gamlss <- c("NBI", "NBII", "PIG", "DEL", "SICHEL")
+  m.l <- m.q <- m.s <- m.lq <-list()
+  ## Ajuste lineal con enlaces
+  for (i in 1:5) {
+    m.l[[fam.gamlss[i]]] <- gamlss(Rounded.Log.GB.Seqs~ CVTOT, data=na.omit(data_tmp),
+                                   family = fam.gamlss[i], n.cyc = 5, trace = FALSE)$aic
+  }
+  ## Regresión polinómico de grado 2 con los enlaces
+  for (i in 1:5) {
+    m.q[[fam.gamlss[i]]] <-GAIC(  gamlss(Rounded.Log.GB.Seqs ~ poly(CVTOT,2),
+                                         data=data_tmp, family = fam.gamlss[i],
+                                         n.cyc = 5, trace = FALSE))
+  }
+  ## Smooth cubic splines (suavización via splines cúbicos)
+  for (i in 1:5) {
+    m.s[[fam.gamlss[i]]] <-GAIC(  gamlss(Rounded.Log.GB.Seqs ~ cs(CVTOT),
+                                         data=na.omit(data_tmp), family = fam.gamlss[i],
+                                         n.cyc = 5, trace = FALSE))
+  }
+  print(unlist(m.l))
+  print(unlist(m.q))
+  print(unlist(m.s))
+
+  ## Igual que se visualizaba anteriormente, los mejores resultados vienen de PIG, DEL y SICHEL (Igual
+  # a como ocurre en la versión de Manuel)
+
+  # sigma.fo permite otorgar una formula para ajustar un modelo para el parámetro sigma (desviación)
+  m.ql <- list()
+  for (i in 1:5) {
+    m.ql[[fam.gamlss[i]]] <- GAIC(gamlss(Rounded.Log.GB.Seqs ~ poly(CVTOT, 2),
+                                         data=na.omit(data_tmp), sigma.fo = ~CVTOT,
+                                         family = fam.gamlss[i], n.cyc = 5, trace = FALSE))
+  }
+  print(unlist(m.ql))
+
+  # Nuevamente apenas hay mejoría.
+  ## En cuanto al "mejor" modelo:
+  ##  DEL - pero desafortunadamente este resultado es bastante poco ajustado debido a que se fija unicamente a la zona inferior
+  ##  Ajustamos también PIG
+  ##  El ajuste vía smoothing spline - aunque el ajuste por regresión polinómico local (grado 2)
+  # tampoco queda descartado. - Nuevamente lo mismo que para Manuel.
+
+  ## En base a esto vamos a evaluar los resultados via plot
+  # Lineal + ajuste de sd
+  mL <- gamlss(Rounded.Log.GB.Seqs~CVTOT , data=na.omit(data_tmp), family =DEL,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Cuadrático + ajuste de sd
+  mC <- gamlss(Rounded.Log.GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family =DEL,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Vía smoothing spline + ajuste de sd
+  mS <- gamlss(Rounded.Log.GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family =DEL,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+
+  # Obtenemos predicciones
+  mL.p <- predict(mL, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mC.p <- predict(mC, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mS.p <- predict(mS, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  # Ploteamos
+  #windows()
+  par(mfrow = c(1,1))
+  plot(data_tmp$CVTOT,data_tmp$Rounded.Log.GB.Seqs,pch=16,ylim=c(0,200), xlab="CVTOT",
+      ylab="Appearances",main=paste("Filtro: ",a))
+  lines(x,mL.p,col="red",type="l",lwd=2)
+  lines(x,mC.p,col="blue",type="l",lwd=2)
+  lines(x,mS.p,col="orange",type="l",lwd=2)
+  legend("topright", c("DEL.Lineal","DEL.Cuadrático","DEL.Splines"),
+         lty=c(2,2,2),col=c("red","blue","orange"), ncol=1, lwd=rep(2,3), inset = .05, cex=0.75)
+  
+  ## En base a esto vamos a evaluar los resultados via plot - PIG
+  # Lineal + ajuste de sd
+  mL <- gamlss(Rounded.Log.GB.Seqs~CVTOT , data=na.omit(data_tmp), family = PIG,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Cuadrático + ajuste de sd
+  mC <- gamlss(Rounded.Log.GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family = PIG,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Vía smoothing spline + ajuste de sd
+  mS <- gamlss(Rounded.Log.GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family = PIG,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+
+  # Obtenemos predicciones
+  mL.p <- predict(mL, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mC.p <- predict(mC, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mS.p <- predict(mS, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  # Ploteamos
+  #windows()
+  par(mfrow = c(1,1))
+  plot(data_tmp$CVTOT,data_tmp$Rounded.Log.GB.Seqs,pch=16,ylim=c(0,200), xlab="CVTOT",
       ylab="Appearances",main=paste("Filtro: ",a))
   lines(x,mL.p,col="red",type="l",lwd=2)
   lines(x,mC.p,col="blue",type="l",lwd=2)
@@ -731,3 +875,10 @@ Los resultados de las medias de variaciones por intervalo se ven extremadamente 
 Variación asociada a un haplogrupo e individuo pertenece a dicho haplogrupo - eliminar (sacar las mismas gráficas) - Incorporado.
 
 Cambiar la base de datos para coger solo de humano y quitar lo de EColi. Ya incorporado en los análisis superiores
+
+## 05/11/2020
+
+Tratar de incluir la información de los haplogrupos a modo de nueva variable:
+
+  * Hasta el momento se han corregido las apariciones en base a si una variación X está asociada a un haplogrupo y adicionalmente el individuo que posee dicha variación pertenece a dicho haplogrupo.
+  * Probar a ubicar los haplogrupos distintos que no han sido asociados a ningún haplogrupo en la variantes. En principio, una variación que aparezca en múltiples haplogrupos no asociados puede aportar información acerca del número de ocurrencias y lo mismo para el caso donde una el número de haplogrupos es bajo. (uno indicaría mucha presencia de la variación mientas que la otra probablemente muchas secuenciaciones del haplogrupo)
