@@ -72,6 +72,7 @@ def get_haplogroups(df, suffix = 'lsu', df_haplogroups = None):
     base_query = 'https://www.mitomap.org/cgi-bin/index_mitomap.cgi?title=Coding+Polymorphism+\-\+at+rCRS+position+\&pos=\&ref=\&alt=\&purge_type='
     base_query_split = base_query.split('\\')
     dir_htmls = '../mitomap_html_dirs_'+suffix+'/'
+    print('Dir htmls: ',dir_htmls)
     if not Utils.exists(dir_htmls):
         Utils.mkdir(dir_htmls)
     files = Utils.get_files(dir_htmls,extension=['html'])
@@ -111,7 +112,7 @@ def get_haplogroups(df, suffix = 'lsu', df_haplogroups = None):
     else:
         print('Assuming information already available')
         df = pd.read_csv('../output/'+suffix+'_haplogroups.csv', sep = ',')
-    df.to_csv('../output/lsu_haplogroups.csv')
+    df.to_csv('../output/'+suffix+'_haplogroups.csv')
     return df, haplogrupos
 
 if __name__ == '__main__':
@@ -151,7 +152,7 @@ if __name__ == '__main__':
         # Process lsu
         preprocess_df(lsu_df)
         # Getting haplogroups
-        lsu_df, haplogroups = get_haplogroups(lsu_df, df_haplogroups = df_haplogrupos_indexed)
+        lsu_df, haplogroups = get_haplogroups(lsu_df, df_haplogroups = df_haplogrupos_indexed, suffix = 'lsu')
         results_df = add_cv(lsu_df, df_control_lsu, haplogroups)
         results_df.to_csv('../output/lsu_df.csv')
         print('LSU MitoMap information: ', results_df)

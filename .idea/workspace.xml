@@ -19,13 +19,33 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- SSU adding">
+    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- SSU full added">
+      <change afterPath="$PROJECT_DIR$/output/ssu_haplogroups.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/control/DV-gen-SSU.csv" beforeDir="false" afterPath="$PROJECT_DIR$/control/DV-gen-SSU.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/output/lsu_df.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/lsu_df.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/output/lsu_haplogroups.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/lsu_haplogroups.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/ssu_df.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/ssu_df.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/r/analisis_rmd.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.Rmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd.html" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-2-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-2-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-2-3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-8.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-9.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-4-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-4-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-4-3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-5-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-5-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-5-3.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/mtDNA.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/mtDNA.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -101,7 +121,7 @@
       <workItem from="1602531747684" duration="7669000" />
       <workItem from="1602651095646" duration="18393000" />
       <workItem from="1602784485850" duration="34958000" />
-      <workItem from="1604127420689" duration="33427000" />
+      <workItem from="1604127420689" duration="35419000" />
     </task>
     <task id="LOCAL-00001" summary="Commit with RScript">
       <created>1602651262101</created>
@@ -215,7 +235,14 @@
       <option name="project" value="LOCAL" />
       <updated>1604604492621</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="- SSU full added">
+      <created>1604719653207</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1604719653207</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -249,7 +276,8 @@
     <MESSAGE value="- Minor changes" />
     <MESSAGE value="- html" />
     <MESSAGE value="- SSU adding" />
-    <option name="LAST_COMMIT_MESSAGE" value="- SSU adding" />
+    <MESSAGE value="- SSU full added" />
+    <option name="LAST_COMMIT_MESSAGE" value="- SSU full added" />
   </component>
   <component name="WindowStateProjectService">
     <state x="828" y="116" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1604692825812">
@@ -260,22 +288,22 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="729" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1603910084574" />
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1604714118422">
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1604738111784">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1604714118422" />
-    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1604714118422">
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1604738111784" />
+    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1604738111784">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1604714118422" />
-    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1604714118422">
+    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1604738111784" />
+    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1604738111784">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1604714118422" />
-    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1604714118422">
+    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1604738111784" />
+    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1604738111784">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1604714118422" />
+    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1604738111784" />
     <state width="1877" height="348" key="GridCell.Tab.1.bottom" timestamp="1604336525096">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -292,20 +320,24 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1877" height="348" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1604336525096" />
+    <state x="736" y="222" key="RollbackChangesDialog" timestamp="1604719612387">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="736" y="222" key="RollbackChangesDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1604719612387" />
     <state x="361" y="165" key="SettingsEditor" timestamp="1603910167655">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="361" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1603910167655" />
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1604604497375">
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1604719637556">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1604604497375" />
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1604719637556" />
     <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1603962380008">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040@0.0.1920.1040" timestamp="1603962380008" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/mtDNAProject$mtDNA.coverage" NAME="mtDNA Coverage Results" MODIFIED="1604714118409" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/mtDNAProject$mtDNA.coverage" NAME="mtDNA Coverage Results" MODIFIED="1604738111779" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
 </project>

@@ -3,10 +3,10 @@ title: 'Análisis mtDNA: LSU'
 author: "Borja Freire Castro"
 date: "23/10/2020"
 output:
-  pdf_document: default
   html_document:
     fig_height: 6
     fig_width: 10
+  pdf_document: default
 ---
 
 El documento trata de explicar los análisis realizados y ofrecer una visualización de estos de cara a su evaluación. 

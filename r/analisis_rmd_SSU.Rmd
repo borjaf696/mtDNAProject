@@ -364,147 +364,6 @@ for (a in l_a){
 }
 ```
 
-#### GAMLSS - Respuesta log(Apariciones+1)
-
-```{r}
-## Modelos paramétricos via GAMLSS (Generalize Aditive models for location scale and shape)
-l_a <- c(0.0)
-data_filtered$Rounded.Log.GB.Seqs <- as.numeric(floor(data_filtered$Log.GB.Seqs))
-for (a in l_a){
-  y <- data_filtered$Rounded.Log.GB.Seqs
-  # Eliminamos datos fuera de lugar
-  lower_bound <- quantile(y, 0.00);lower_bound
-  upper_bound <- quantile(y, 1 - a);upper_bound
-
-  outlier_ind <- which(y < lower_bound | y > upper_bound)
-  if (!is.na(outlier_ind[1])){
-    data_tmp <- data_filtered[-outlier_ind,]
-  }else{
-    data_tmp <- data_filtered}
-  x <- sort(unique(data_tmp$CVTOT))
-  ## Estudio de las distribuciones
-  #windows()
-  op <- par(mfrow = c(2, 4))
-  dPO <- histDist(data_tmp$Rounded.Log.GB.Seqs, "PO",
-                  main = "PO", trace = FALSE, xlim=c(0,20))     # Poisson
-  dNBI <- histDist(data_tmp$Rounded.Log.GB.Seqs, "NBI",
-                   main = "NBI", trace = FALSE,xlim=c(0,20))   # Binomial negativa tipo 1
-  dPIG <- histDist(data_tmp$Rounded.Log.GB.Seqs, "PIG",
-                   main = "PIG", trace = FALSE,xlim=c(0,20))   # Poisson inverse gaussian
-  dZIP <- histDist(data_tmp$Rounded.Log.GB.Seqs, "ZIP",
-                   main = "ZIP", trace = FALSE, xlim=c(0,20))  # Zero inflated poisson
-  dZIP2 <- histDist(data_tmp$Rounded.Log.GB.Seqs, "ZIP2",
-                    main = "ZIP2", trace = FALSE, xlim=c(0,20)) # Zero inf. pois. 2
-  dDel <- histDist(data_tmp$Rounded.Log.GB.Seqs, "DEL",
-                    main = "DEL", trace = FALSE, xlim=c(0,20)) # Zero inf. pois. 2
-  par(op)
-  print(AIC(dPO, dNBI, dPIG, dSI, dZIP, dZIP2, dDel))
-
-  ## En base al AIC nos quedaríamos con dNBI para el caso de log(apariciones) que es un modelo de poisson pero descartariamos claramente los de ceros inflados.
-
-  ## A través del ajuste de gamlss ajustamos distintos modelos con diferentes familias de funciones
-  ## Eliminapos PO, ZIP y ZIP2 dado que sus AIC están fuera de lugar en comparación a los otros 3
-  fam.gamlss <- c("NBI", "NBII", "PIG", "DEL")
-  m.l <- m.q <- m.s <- m.lq <-list()
-  ## Ajuste lineal con enlaces
-  for (i in 1:5) {
-    m.l[[fam.gamlss[i]]] <- gamlss(Rounded.Log.GB.Seqs~ CVTOT, data=na.omit(data_tmp),
-                                   family = fam.gamlss[i], n.cyc = 5, trace = FALSE)$aic
-  }
-  ## Regresión polinómico de grado 2 con los enlaces
-  for (i in 1:5) {
-    m.q[[fam.gamlss[i]]] <-GAIC(  gamlss(Rounded.Log.GB.Seqs ~ poly(CVTOT,2),
-                                         data=data_tmp, family = fam.gamlss[i],
-                                         n.cyc = 5, trace = FALSE))
-  }
-  ## Smooth cubic splines (suavización via splines cúbicos)
-  for (i in 1:5) {
-    m.s[[fam.gamlss[i]]] <-GAIC(  gamlss(Rounded.Log.GB.Seqs ~ cs(CVTOT),
-                                         data=na.omit(data_tmp), family = fam.gamlss[i],
-                                         n.cyc = 5, trace = FALSE))
-  }
-  print(unlist(m.l))
-  print(unlist(m.q))
-  print(unlist(m.s))
-
-  ## En este caso tenemos novedades y el mejor modelo viene dado por NBI - Binomial Negativa tipo 1
-
-  # sigma.fo permite otorgar una formula para ajustar un modelo para el parámetro sigma (desviación)
-  m.ql <- list()
-  for (i in 1:5) {
-    m.ql[[fam.gamlss[i]]] <- GAIC(gamlss(Rounded.Log.GB.Seqs ~ poly(CVTOT, 2),
-                                         data=na.omit(data_tmp), sigma.fo = ~CVTOT,
-                                         family = fam.gamlss[i], n.cyc = 5, trace = FALSE))
-  }
-  print(unlist(m.ql))
-
-  # Nuevamente apenas hay mejoría.
-  ## En cuanto al "mejor" modelo:
-  ##  DEL - pero desafortunadamente este resultado es bastante poco ajustado debido a que se fija unicamente a la zona inferior
-  ##  Ajustamos también DEL
-  ##  El ajuste vía smoothing spline - aunque el ajuste por regresión polinómico local (grado 2)
-  # tampoco queda descartado. - Nuevamente lo mismo que para Manuel.
-
-  ## En base a esto vamos a evaluar los resultados via plot
-  # Lineal + ajuste de sd
-  mL <- gamlss(Rounded.Log.GB.Seqs~CVTOT , data=na.omit(data_tmp), family = NBI,
-               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
-  # Cuadrático + ajuste de sd
-  mC <- gamlss(Rounded.Log.GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family = NBI,
-               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
-  # Vía smoothing spline + ajuste de sd
-  mS <- gamlss(Rounded.Log.GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family = NBI,
-               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
-
-  # Obtenemos predicciones
-  mL.p <- predict(mL, what = "mu", newdata=data.frame("CVTOT"=x),
-                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
-  mC.p <- predict(mC, what = "mu", newdata=data.frame("CVTOT"=x),
-                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
-  mS.p <- predict(mS, what = "mu", newdata=data.frame("CVTOT"=x),
-                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
-  # Ploteamos
-  #windows()
-  par(mfrow = c(1,1))
-  plot(data_tmp$CVTOT,data_tmp$Rounded.Log.GB.Seqs,pch=16,ylim=c(0,max(y)), xlab="CVTOT",
-      ylab="Appearances",main=paste("Filtro: ",a))
-  lines(x,mL.p,col="red",type="l",lwd=2)
-  lines(x,mC.p,col="blue",type="l",lwd=2)
-  lines(x,mS.p,col="orange",type="l",lwd=2)
-  legend("topright", c("NBI.Lineal","NBI.Cuadrático","NBI.Splines"),
-         lty=c(2,2,2),col=c("red","blue","orange"), ncol=1, lwd=rep(2,3), inset = .05, cex=0.75)
-  
-  ## En base a esto vamos a evaluar los resultados via plot - PIG
-  # Lineal + ajuste de sd
-  mL <- gamlss(Rounded.Log.GB.Seqs~CVTOT , data=na.omit(data_tmp), family = DEL,
-               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
-  # Cuadrático + ajuste de sd
-  mC <- gamlss(Rounded.Log.GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family = DEL,
-               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
-  # Vía smoothing spline + ajuste de sd
-  mS <- gamlss(Rounded.Log.GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family = DEL,
-               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
-
-  # Obtenemos predicciones
-  mL.p <- predict(mL, what = "mu", newdata=data.frame("CVTOT"=x),
-                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
-  mC.p <- predict(mC, what = "mu", newdata=data.frame("CVTOT"=x),
-                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
-  mS.p <- predict(mS, what = "mu", newdata=data.frame("CVTOT"=x),
-                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
-  # Ploteamos
-  #windows()
-  par(mfrow = c(1,1))
-  plot(data_tmp$CVTOT,data_tmp$Rounded.Log.GB.Seqs,pch=16,ylim=c(0,max(y)), xlab="CVTOT",
-      ylab="Appearances",main=paste("Filtro: ",a))
-  lines(x,mL.p,col="red",type="l",lwd=2)
-  lines(x,mC.p,col="blue",type="l",lwd=2)
-  lines(x,mS.p,col="orange",type="l",lwd=2)
-  legend("topright", c("DEL.Lineal","DEL.Cuadrático","DEL.Splines"),
-         lty=c(2,2,2),col=c("red","blue","orange"), ncol=1, lwd=rep(2,3), inset = .05, cex=0.75)
-}
-```
-
 ## Regresión cuantil
 
 ```{r}
@@ -526,10 +385,12 @@ summary(lin.mod,se="boot")   # Tantos ceros implican que las regresiones cuantil
 
 plot(data_filtered$CVTOT,data_filtered$GB.Seqs,pch=16,col=1,ylim=c(0,38),xlab="CvIndex",ylab="Appearances",main="")
 for (i in 1:(L-1))
-  {
-  abline(rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L-i] ,method="br"),col=colores[i], lty=1, lwd =2)
-  abline(rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L+i] ,method="br"),col=colores[i], lty=1,lwd =2 )
-  }
+{
+  rq_i <- rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L-i] ,method="br", alpha = .05, ci = T)
+  rq_i2 <- rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L+i] ,method="br", alpha = .05, ci = T)
+  abline(rq_i,col=colores[i], lty=1, lwd =2)
+  abline(rq_i2,col=colores[i], lty=1,lwd =2 )
+}
 abline(rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L] ,method="br"),col="tomato",lty=1,lwd=2)
 abline(lm(GB.Seqs~ CVTOT, data=data_filtered),col="red", lty=2, lwd = 2)
 legend("topright",leg, col=c(colores[(L-1):1],"tomato","red"), lty=c(rep(1,L),2), inset=0.025,lwd = 2)
