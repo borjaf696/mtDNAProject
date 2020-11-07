@@ -54,7 +54,6 @@ def add_cv(df_section, df_control, haplogroups = None):
         return pd.concat([df_result, pd.DataFrame(data = cells_haplogroups, columns = haplogroups)], axis = 1)
     else:
         return df_result
-
 '''
 Obtención de haplogrupos para cada una de las secuencias:
     * Construcción de la query de MitoMap.
@@ -111,7 +110,7 @@ def get_haplogroups(df, suffix = 'lsu', df_haplogroups = None):
                 df.at[index,haplogroup] += 1
     else:
         print('Assuming information already available')
-        df = pd.read_csv('../output/lsu_haplogroups.csv', sep = ',')
+        df = pd.read_csv('../output/'+suffix+'_haplogroups.csv', sep = ',')
     df.to_csv('../output/lsu_haplogroups.csv')
     return df, haplogrupos
 
@@ -144,7 +143,8 @@ if __name__ == '__main__':
         # Process ssu
         preprocess_df(ssu_df)
         print('SSU MitoMap information: ',ssu_df)
-        ssu_df, haplogroups = get_haplogroups(ssu_df, df_haplogroups = df_haplogrupos_indexed)
+        ssu_df, haplogroups = get_haplogroups(ssu_df, df_haplogroups = df_haplogrupos_indexed, suffix = 'ssu')
+        print(ssu_df)
         results_df = add_cv(ssu_df, df_control_ssu, haplogroups)
         results_df.to_csv('../output/ssu_df.csv')
         print('SSU MitoMap information: ', results_df)
