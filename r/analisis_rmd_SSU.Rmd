@@ -1,5 +1,5 @@
 ---
-title: "Análisis mtDNA: LSU"
+title: "Análisis mtDNA: SSU"
 author: "Borja Freire Castro"
 date: "23/10/2020"
 output:
@@ -51,7 +51,8 @@ data$Log.GB.Seqs <- log(data$GB.Seqs + 1)
 data$Bin.GB.Seqs <- numeric(length(data$GB.Seqs))
 data <- na.omit(data)
 data_neg <- data[data$CVTOT == -1,]
-data_filtered <- data[data$CVTOT != -1,]
+data_filtered <- data[data$CVTOT != -1,]# Haplogrupos diferentes - 6- 36
+data_filtered$distinct_haplogroups <- apply(data_filtered[6:36], 1,function(x) sum(x > 0))
 # Visualización de los hist de data_filtered
 sum(data_filtered$GB.Seqs == 0)
 sum(data_filtered$GB.Seqs != 0)
@@ -655,11 +656,6 @@ total_pos_variantes <- length(unique(data_filtered$Genomic))-1;total_pos_variant
 length_data_apar/total_pos_variantes
 ```
   
-Como primer detalle indicar que según se ver existen:
-
-  * 688 valores de CVindex con un número de apariciones > 0, estas distribuidas entorno a 563 de las 1599 posiciones de la componente LSU rRNA, de donde salen 1.22 variantes por posición con variación.
-  * 2340 valores de CVindex con un número de apariciones == 0.
-
 Pasamos a ver como se distribuyen los CVIndex para Apariciones = 0, y como se distribuyen los datos cuando el número de apariciones es > 0:
 
 ```{r}
@@ -741,3 +737,45 @@ Tratar de incluir la información de los haplogrupos a modo de nueva variable:
 
   * Hasta el momento se han corregido las apariciones en base a si una variación X está asociada a un haplogrupo y adicionalmente el individuo que posee dicha variación pertenece a dicho haplogrupo.
   * Probar a ubicar los haplogrupos distintos que no han sido asociados a ningún haplogrupo en la variantes. En principio, una variación que aparezca en múltiples haplogrupos no asociados puede aportar información acerca del número de ocurrencias y lo mismo para el caso donde una el número de haplogrupos es bajo. (uno indicaría mucha presencia de la variación mientas que la otra probablemente muchas secuenciaciones del haplogrupo)
+  
+  Los modelos a ajustar serán:
+    
+    * Modelo aditivo con variables CVIndex únicamente a modo de control.
+    * Modelo aditivo con variables CVIndex y haplogrupos_distintos, y se incorporarán dos versiones con y sin interacción.
+
+```{r}
+md_control <- gam(Log.GB.Seqs~s(CVTOT), data = data_filtered)
+par(mfrow = c(1,4))
+gam.check(md_control)
+summary(md_control)
+par(mfrow = c(1,1))
+plot(md_control,shade=T,residuals=T,cex=4)
+```
+
+En base a los resultados obtenidos se puede decir que a nivel de ajuste de datos la variable CVTOT presenta significancia clara. Además en base al gam.check podemos "asegurar" que el número de grados de libertad dados a la variable no se encuentra en ningún caso infraestimado. Por otro lado, la deviance es ínfima lo que tiene sentido debido a la enorme dispersión que presentan los datos iniciales. Pero dado que a nosotros solamente nos interesa capturar la tendencia de los datos y no realmente ajustar un modelo para hacer predicciones continuamos hacia adelante.
+
+```{r}
+md_adjust_1 <- gam(Log.GB.Seqs~s(CVTOT) + s(distinct_haplogroups), data = data_filtered)
+par(mfrow = c(1,4))
+gam.check(md_adjust_1)
+summary(md_adjust_1)
+par(mfrow = c(1,2))
+plot(md_adjust_1,shade=T,residuals=T,cex=4)
+vis.gam(md_adjust_1, plot.type = "contour")
+```
+
+Obviamente al incorporar la variable "distinct.haplogroups" la cantidad de variabilidad explicada por el modelo crece enormemente, pero es más debido a la correlación (clara) existenten entre la variable regresora y la variable a regresada (a más secuencias en asociadas a la variación mayor número esperado de haplogrupos asociado). En base a eso podemos asegurar que no existe comportamiento "caracterizable" de atípico sino que se sigue una pauta lógica.
+
+Por contrastar la existencia de interacción entre CVIndex y los haplogrupos distintos:
+
+```{r}
+md_adjust_1 <- gam(Log.GB.Seqs~s(CVTOT) + s(distinct_haplogroups) + s(CVTOT, distinct_haplogroups), data = data_filtered)
+par(mfrow = c(1,4))
+gam.check(md_adjust_1)
+summary(md_adjust_1)
+par(mfrow = c(1,2))
+plot(md_adjust_1,shade=T,residuals=T,cex=4)
+vis.gam(md_adjust_1, plot.type = "contour")
+```
+
+A la vista de los resultados habría que descartar la interacción entre las variables regresoras como elemento que ayude a explicar el número de secuencias.
