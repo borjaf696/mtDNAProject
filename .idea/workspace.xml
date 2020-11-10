@@ -19,34 +19,10 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- SSU full added">
-      <change afterPath="$PROJECT_DIR$/output/ssu_haplogroups.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.html" afterDir="false" />
+    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- Adding haplotype analysis">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/lsu_df.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/lsu_df.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/lsu_haplogroups.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/lsu_haplogroups.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.Rmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd.html" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-2-1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-2-2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-2-3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-4.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-5.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-6.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-7.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-8.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-3-9.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-4-1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-4-2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-4-3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-5-1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-5-2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_files/figure-html/unnamed-chunk-5-3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/mtDNA.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/mtDNA.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,6 +98,7 @@
       <workItem from="1602651095646" duration="18393000" />
       <workItem from="1602784485850" duration="34958000" />
       <workItem from="1604127420689" duration="35419000" />
+      <workItem from="1604942411189" duration="2011000" />
     </task>
     <task id="LOCAL-00001" summary="Commit with RScript">
       <created>1602651262101</created>
@@ -242,7 +219,14 @@
       <option name="project" value="LOCAL" />
       <updated>1604719653207</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="- Adding haplotype analysis">
+      <created>1604942442301</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1604942442301</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -277,7 +261,8 @@
     <MESSAGE value="- html" />
     <MESSAGE value="- SSU adding" />
     <MESSAGE value="- SSU full added" />
-    <option name="LAST_COMMIT_MESSAGE" value="- SSU full added" />
+    <MESSAGE value="- Adding haplotype analysis" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Adding haplotype analysis" />
   </component>
   <component name="WindowStateProjectService">
     <state x="828" y="116" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1604692825812">
@@ -328,10 +313,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="361" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1603910167655" />
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1604719637556">
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1604942447445">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1604719637556" />
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1604942447445" />
     <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1603962380008">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>

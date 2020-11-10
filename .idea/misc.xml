@@ -11,6 +11,13 @@
             </RMarkdownRenderProfile>
           </value>
         </entry>
+        <entry key="file://$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd">
+          <value>
+            <RMarkdownRenderProfile>
+              <option name="outputDirectoryUrl" value="file://$PROJECT_DIR$/r" />
+            </RMarkdownRenderProfile>
+          </value>
+        </entry>
       </map>
     </option>
   </component>
