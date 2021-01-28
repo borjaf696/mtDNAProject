@@ -4,6 +4,12 @@ The initial goal of the project is first of all to verify if it exists any poten
 
 The src folder contains a script to preprocess both control and MitoMap data to build and inteligible dataframe applicable in further analysis. 
 
+Repository also contains the implementation of coocurrence analysis in mitochondrial genomes. These techniques aims to create an automatic and reliable way to cluster variants based only in the sequencing data. Three techniques are evaluated in the  r/coocurrence.RMD:
+
+* Mutual information
+* Information Value
+* Pure Singular Value Decomposition 
+
 ## Data
 
 ### Control
@@ -45,7 +51,13 @@ All the assayed models confirm the original hipotesis of "the higher number in t
 To extent the analysis haplogroup information (information related with the "race" of the individual being sequenced) was added, in the first place only the number of occurences were corrected removing a variation if the individual bearing it belongs to an haplogroup associated with the variation. Afterwards a more complex analysis was performed trying to look for some not yet associated haplogroups but there were not luck. 
  
 All these analysis have been performed via R and can be found in r/analisis_rmd.Rmd in RMarkdown format
+
+## Coocurrence analysis
+
+The core is all in r/coocurencia_rmd.Rmd. This file produces and .html with the summary of the results achieved. Furthermore, it builds several .csvs with the association between variants and the similarity value suggested for them (this information is in output_r/).
  
  ## Summary conclusions so far
  
  The data shows that the more CVIndex (which means that the region is highly preserved) the lower number of occurences in GenBank (which means less variations reported). These trend is kept for both SSU and LSU section. 
+ 
+ Coocurrence analysis are quite promising showing that the three techniques are competitive, with SVD and MI slightly better than IV. However, results are still pending to check whether or not they are reliable by an expert source. 

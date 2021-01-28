@@ -6,13 +6,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8cd050ac-d47e-4a90-96c6-16c509928b13" name="Default Changelist" comment="- Final version">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.Rmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd.html" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_SSU.html" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/mtDNA.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/mtDNA.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,7 +93,7 @@
       <workItem from="1605282094879" duration="36113000" />
       <workItem from="1606566207334" duration="2618000" />
       <workItem from="1608337213224" duration="1492000" />
-      <workItem from="1611663894785" duration="2241000" />
+      <workItem from="1611663894785" duration="2668000" />
     </task>
     <task id="LOCAL-00001" summary="Commit with RScript">
       <created>1602651262101</created>
@@ -261,7 +256,14 @@
       <option name="project" value="LOCAL" />
       <updated>1611830763970</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="- Final version">
+      <created>1611831151519</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1611831151519</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -386,10 +388,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="361" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1603910167655" />
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1611830787292">
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1611831167659">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1611830787292" />
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1611831167659" />
     <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1603962380008">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
