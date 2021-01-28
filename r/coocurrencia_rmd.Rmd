@@ -1,0 +1,168 @@
+---
+title: "Coocurrencia mutaciones"
+author: "Borja Freire Castro"
+date: "23/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(gtools)
+library(rsparse)
+library(infotheo)
+library(InformationValue)
+library(dplyr)
+```
+
+## Análisis de coocurrencia de mutaciones
+
+La base del análisis es ir reduciendo paulatinamente el valor del umbral para determinar que posiciones de variación aparecen. Lo esperable es que inicialmente las posiciones que aparezcan sean posiciones asociadas con variaciones de haplogrupos, pero a medida que se baje deberían irse incorporando variaciones no asociadas a ningún haplogrupo.
+
+```{r cars}
+data_variantes <- na.replace(read.csv('../output/variants_genBankId.csv'),0)
+data_variantes[is.na(data_variantes)] <- 0
+sum(is.na(data_variantes))
+#head(data_variantes)
+n <- nrow(data_variantes);n
+c <- ncol(data_variantes);c
+# Load haplogroups
+haplogroups <- na.replace(read.csv(file = '../output/haplogroups_matrix.csv', header = TRUE),0)
+associated_variants <- names(haplogroups[,2:ncol(haplogroups)])
+print(paste('Variaciones asociadas: ', associated_variants))
+# Variantes únicas
+print(paste('Variaciones únicas: ',names(haplogroups[apply(haplogroups[,2:ncol(haplogroups)], 2, sum) == 1])))
+#head(haplogroups)
+```
+
+Tenemos:
+  
+  * 51433 individuos
+  * 8122 posiciones con variaciones, de las cuales 290 tienen más de un 1% de unos en sus columnas (es decir variaciones).
+  * 1236097 variaciones en total
+  
+## SVD (truncado)
+
+SVD es una técnica de descomposición matricial ampliamente usada en sistemas de recomendación. Esta se basa en dividir una matriz $M_{m x n}$ en tres matrices de modo que $M = U\Sigma V^T$ donde:
+  
+  * U es una matriz $mxm$ con información relativa a los usuarios, de manera más precisa la matriz $U$:
+    * Es ortogonal $U^T*U = I$
+    * Se compone de los autovectores de $MM^T$
+    * De manera intuitiva da coeficientes a los users (genbankIds) para cada uno de los factores latentes (características escondidas o desconocidas pero inferibles).
+  * $\Sigma$ matriz diagonal $mxn$.
+    * Número de elementos en la diagonal es $rank(M)$. En el caso de sistemas de recomendación salvo que dos usuarios hayan dado exactamente las mismas valoraciones a las mismas películas el $rank(M) = min(m,n)$. En el caso que nosotros manejamos en el peor caso tendríamos tanto rango como haplogrupos, lo que implicaría que todos los individuos del mismo haplogrupo comparten exactamente las mismas variantes (de hecho esa es la idea tras el rango de $ranks$ utilizado en el análisis posterior).
+    * Los valores de $\Sigma$ son los autovalores ordenados de la matriz M.
+  * $V^T$  es una matriz $nxn$ con información relativa a los items (variaciones en nuestro caso), de manera más precisa la matriz $V$:
+    * Es ortogonal $V^T*V = I$
+    * Se compone de los autovectores de $M^TM
+    * De manera intuitiva da coeficientes a los items para cada uno de los factores latentes.
+    
+La idea se basa en calcular distancias entre las columnas de la matriz $U$ y obtener el top 2-3 cercano para cada columna. Lo esperable es que la asociación con este top 2-3 sea siempre dentro del mismo haplogrupo.
+
+## IV y MI
+  
+La IV de la categoría X es calculada como $$IV=(perc.Good− perc.Bad)*WOE$$
+
+Donde $$WOE = ln\big(\frac{perc.Good}{perc.Bad}\big)$$
+
+La IV final de una variable categórica es la suma de las IVs individuales de cada una de sus categorias.
+
+| IV            | Importance                      |
+|---------------|---------------------------------|
+| Menos de 0.02 | Nada de importancia             |
+| 0.02 - 0.1    | Predicción débil                |
+| 0.1 - 0.3     | Predicción media                |
+| 0.3 - 0.5     | Predicción fuerte               |
+| > 0.5         | Predicción Sospechosamente alta |
+
+La MI se puede definir como la cantidad de información que una variable aporta de otra: $$I(X,Y) = \sum_{y\in Y}\sum_{x\in X}p_{(x,y)}(x,y)log\big(\frac{p_{(x,y)}(x,y)}{p_{x(x)}p_{y(y)}}\big)$$ donde $p_{(x,y)}$ es la probabilidad conjunta de (x,y), y $p_x$, $p_y$ son las marginales de X e Y.
+
+En este caso la idea es la misma que antes:
+  
+  * Para cada variable (posición con #variaciones mitocondriales por encima del $\alpha$) TOP-N variables con las que comparte comportamiento.
+  * Para cada variable comprobar si dicho TOP-N se corresponde con posiciones de modo que ambas variables coocurren en algún haplogrupo. En caso de que no ocurra tenemos un match (es decir tenemos una coocurrencia de variaciones en posiciones que no están compartidas entre haplogrupos).
+  
+Objetivo:
+
+  * Las variantes asociadas son conocidas y en principio se asocian por nivel de ocurrencia en los distintos individuos dentro de un haplogrupo (entre otras cosas). Por tanto, es lógico pensar que al realizar el primer filtrado por número de individuos que poseen dicha variación lo que nos saldrán serán las posiciones y las variaciones asociadas a ciertos haplogrupos.
+  * Por otro lado, la coocurrencia de las variaciones debería coincidir con el haplogrupo compartido en los individuos. Es decir, si alguna medida de información (VI, MI o $V$ en SVD) reporta que el nivel de coocurrencia entre dos variantes X, Y es elevada y que además dichas variantes X, Y no están asociadas al mismo haplogrupo entonces hemos encontrado algo de interés.
+
+```{r}
+library(arules)
+thresholds <- c(0.2, 0.1, 0.05)
+for (threshold in thresholds){
+  variantes_filtered <- data_variantes
+  for (pos in names(data_variantes)[2:c])
+  {
+    if (pos != 'Haplogroup'){
+      if (sum(variantes_filtered[,pos])/n < threshold)
+        variantes_filtered[,pos] <- NULL
+    }
+  }
+  features_study <- c()
+  for (i in names(variantes_filtered))
+  {
+    if (!is.factor(variantes_filtered[,i]))
+      features_study <- c(features_study, i)
+  }
+  c_local <- dim(variantes_filtered[features_study])[2]
+  data_variantes_tmp <- variantes_filtered[,features_study]
+  percentage_variants_associated <- 0
+  # Chequeamos que cantidad de variantes no filtradas son variantes asociadas
+  hits <- numeric(c_local)
+  names(hits) <- features_study
+  for (feature in features_study){
+    if (feature %in% associated_variants){
+      percentage_variants_associated <- percentage_variants_associated + 1/c_local
+      hits[feature] <- 1
+    }
+  }
+  print(paste('Porcentaje de variantes asociadas: ',percentage_variants_associated))
+  
+  for (feature_i in  names(data_variantes_tmp))
+  {
+    data_variantes_tmp[data_variantes_tmp[,feature_i] > 1,feature_i] <- 1
+  }
+  # PureSVD
+  m <- as.matrix(variantes_filtered[,features_study])
+  model <- PureSVD$new(rank = c_local)
+  user_emb <- model$fit_transform(m, n_iter = 100, convergence_tol = 0.00001)
+  variants_emb <- model$components;variants_emb
+  m_svd_rmse <- matrix(0, nrow = c_local, ncol = c_local)
+  rownames(m_svd_rmse) <- features_study
+  colnames(m_svd_rmse) <- features_study
+  for (i in seq(1:c_local))
+  {
+    # RSME
+    for (j in seq(1:c_local))
+      m_svd_rmse[i,j] <- sqrt(mean((variants_emb[,i] - variants_emb[,j])^2))
+  }
+  m_svd_rmse <- abs(m_svd_rmse - max(m_svd_rmse))
+  top <- 3
+  for (i in seq(1:c_local))
+  {
+    df_tmp <- data.frame(m_svd_rmse[i,])
+    top_n_values <- df_tmp%>% top_n(top)
+    print(paste('Asociaciones: ',features_study[i]))
+    print(features_study[df_tmp$m_svd_rmse.i... %in% top_n_values[[1]]])
+  }
+  # MI/VI
+  m_vi <- matrix(0, nrow = c_local, ncol = c_local)
+  m_mi <- mutinformation(data_variantes_tmp[,features_study], method="emp")
+  i <- 1
+  for (feature_i in features_study)
+  {
+    j <- 1
+    for (feature_j in features_study){
+      m_vi[i,j] <- IV(X=as.factor(data_variantes_tmp[,feature_i]), Y=data_variantes_tmp[,feature_j])
+      j <- j +1 
+    }
+    i <- i + 1
+  }
+  heatmap(m_svd_rmse, main = paste("V SVD (relation) with ", threshold),labRow = features_study, labCol = features_study)
+  heatmap(m_vi, main = paste("Information value with ", threshold), labRow = features_study, labCol = features_study)
+  heatmap(m_mi, main = paste("Mutual information with ", threshold))
+}
+```
+
+
+

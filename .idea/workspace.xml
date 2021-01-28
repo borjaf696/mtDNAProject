@@ -1,28 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BranchesTreeState">
-    <expand>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-    </expand>
+    <expand />
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="- Adding haplotype analysis">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="8cd050ac-d47e-4a90-96c6-16c509928b13" name="Default Changelist" comment="- Final version">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.Rmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd.html" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_SSU.html" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mtDNA.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/mtDNA.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +42,11 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="settings.editor.selected.configurable" value="preferences.fileTypes" />
   </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\borja\PycharmProjects\mtDNAProject\tmp\json" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="mtDNA" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="mtDNA" />
@@ -67,7 +62,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/mtDNA.py" />
-      <option name="PARAMETERS" value="--mitomap ../data/mtRNR1.tvs,../data/mtRNR2.tvs" />
+      <option name="PARAMETERS" value="--mitomap ../data/mtRNR1.tvs,../data/mtRNR2.tvs --process-whole-variants" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -87,7 +82,7 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="1b6d27f4-8bae-4c38-a4d0-1979e72a9688" name="Default Changelist" comment="" />
+      <changelist id="8cd050ac-d47e-4a90-96c6-16c509928b13" name="Default Changelist" comment="- Mutations coocurrence analysis" />
       <created>1602083281455</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
@@ -98,7 +93,12 @@
       <workItem from="1602651095646" duration="18393000" />
       <workItem from="1602784485850" duration="34958000" />
       <workItem from="1604127420689" duration="35419000" />
-      <workItem from="1604942411189" duration="2011000" />
+      <workItem from="1604942411189" duration="3948000" />
+      <workItem from="1605168848411" duration="4062000" />
+      <workItem from="1605282094879" duration="36113000" />
+      <workItem from="1606566207334" duration="2618000" />
+      <workItem from="1608337213224" duration="1492000" />
+      <workItem from="1611663894785" duration="2241000" />
     </task>
     <task id="LOCAL-00001" summary="Commit with RScript">
       <created>1602651262101</created>
@@ -226,7 +226,42 @@
       <option name="project" value="LOCAL" />
       <updated>1604942442301</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="- README.md modifications">
+      <created>1604996554612</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1604996554612</updated>
+    </task>
+    <task id="LOCAL-00020" summary="- Changes on haplogroups">
+      <created>1606567515117</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1606567515117</updated>
+    </task>
+    <task id="LOCAL-00021" summary="- Mutations coocurrence analysis">
+      <created>1606850322730</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1606850322730</updated>
+    </task>
+    <task id="LOCAL-00022" summary="- Final version">
+      <created>1611830555390</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1611830555390</updated>
+    </task>
+    <task id="LOCAL-00023" summary="- Final version">
+      <created>1611830763970</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1611830763970</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -235,11 +270,41 @@
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
+        <entry key="1">
+          <value>
+            <State>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="roots">
+                    <value>
+                      <list>
+                        <option value="$PROJECT_DIR$" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
         <entry key="MAIN">
           <value>
             <State />
           </value>
         </entry>
+      </map>
+    </option>
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="1" value="TOOL_WINDOW" />
       </map>
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
@@ -262,33 +327,37 @@
     <MESSAGE value="- SSU adding" />
     <MESSAGE value="- SSU full added" />
     <MESSAGE value="- Adding haplotype analysis" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Adding haplotype analysis" />
+    <MESSAGE value="- README.md modifications" />
+    <MESSAGE value="- Changes on haplogroups" />
+    <MESSAGE value="- Mutations coocurrence analysis" />
+    <MESSAGE value="- Final version" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Final version" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="828" y="116" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1604692825812">
+    <state x="828" y="116" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1605905670662">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="828" y="116" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1604692825812" />
-    <state x="729" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1603910084574">
+    <state x="828" y="116" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1605905670662" />
+    <state x="729" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1605903648597">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="729" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1603910084574" />
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1604738111784">
+    <state x="729" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1605903648597" />
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1606547209683">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1604738111784" />
-    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1604738111784">
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1606547209683" />
+    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1606547209683">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1604738111784" />
-    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1604738111784">
+    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1606547209683" />
+    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1606547209683">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1604738111784" />
-    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1604738111784">
+    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1606547209683" />
+    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1606547209683">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1604738111784" />
+    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1606547209683" />
     <state width="1877" height="348" key="GridCell.Tab.1.bottom" timestamp="1604336525096">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -305,6 +374,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1877" height="348" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1604336525096" />
+    <state x="598" y="281" key="MultipleFileMergeDialog" timestamp="1611831005098">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="598" y="281" key="MultipleFileMergeDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1611831005098" />
     <state x="736" y="222" key="RollbackChangesDialog" timestamp="1604719612387">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -313,16 +386,28 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="361" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1603910167655" />
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1604942447445">
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1611830787292">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1604942447445" />
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1611830787292" />
     <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1603962380008">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040@0.0.1920.1040" timestamp="1603962380008" />
+    <state x="789" y="438" key="git4idea.rebase.GitUnstructuredEditor" timestamp="1611831007036">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="789" y="438" key="git4idea.rebase.GitUnstructuredEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1611831007036" />
+    <state x="738" y="414" key="git4idea.ui.GitResetDialog" timestamp="1611830704797">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="738" y="414" key="git4idea.ui.GitResetDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1611830704797" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1605949096237">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1605949096237" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/mtDNAProject$mtDNA.coverage" NAME="mtDNA Coverage Results" MODIFIED="1604738111779" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/mtDNAProject$mtDNA.coverage" NAME="mtDNA Coverage Results" MODIFIED="1606547209677" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
 </project>

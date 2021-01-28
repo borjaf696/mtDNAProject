@@ -47,6 +47,7 @@ data$CVTOT <- as.numeric(as.character(data$CVTOT))
 data$GB.Seqs <- na.omit(as.numeric(as.character(data$GB.Seqs)))
 data$GB.Seqs.Corrected <- na.omit(as.numeric(as.character(data$GB.Seqs.Corrected)))
 # Corregimos el impacto del haplogrupo:
+data$GB.Seqs.Original <- data$GB.Seqs
 data$GB.Seqs <- data$GB.Seqs.Corrected
 data$Log.GB.Seqs <- log(data$GB.Seqs + 1)
 data$Bin.GB.Seqs <- numeric(length(data$GB.Seqs))
@@ -74,6 +75,20 @@ plot(data_filtered$CVTOT,data_filtered$GB.Seqs,pch=1,ylim = c(0,30),
      xlab="CVTOT",ylab="Appearances", main = 'Apariciones frente a CVindex (filtro de -1 aplicado)')
 x <- unique(data_filtered$CVTOT)
 y <- data_filtered$GB.Seqs
+```
+
+Breve análisis acerca de que posiciones presentar mayor número de variaciones corregidas y cuales mayor número de haplogrupos distintos (estudios al 90\% y al 95\%).
+
+```{r}
+y <- data_filtered$GB.Seqs
+alphas <- c(0.025,0.05)
+for (a in alphas)
+{
+  upper_bound <- quantile(y, 1 - a);upper_bound
+  outlier_ind <- which(y > upper_bound)
+  data_tmp <- data_filtered[outlier_ind,]
+  write.csv(data_tmp, paste("../output_r/lsu_",a,".csv"), sep = ',')
+}
 ```
 
 ## Análisis paramétricos:
@@ -389,8 +404,10 @@ summary(lin.mod,se="boot")   # Tantos ceros implican que las regresiones cuantil
 plot(data_filtered$CVTOT,data_filtered$GB.Seqs,pch=16,col=1,ylim=c(0,38),xlab="CvIndex",ylab="Appearances",main="")
 for (i in 1:(L-1))
   {
-  abline(rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L-i] ,method="br"),col=colores[i], lty=1, lwd =2)
-  abline(rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L+i] ,method="br"),col=colores[i], lty=1,lwd =2 )
+  q_pos <- rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L-i] ,method="br")
+  q_neg <- rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L+i] ,method="br")
+  abline(q_pos,col=colores[i], lty=1, lwd =2)
+  abline(q_neg,col=colores[i], lty=1,lwd =2 )
   }
 abline(rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L] ,method="br"),col="tomato",lty=1,lwd=2)
 abline(lm(GB.Seqs~ CVTOT, data=data_filtered),col="red", lty=2, lwd = 2)

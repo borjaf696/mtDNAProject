@@ -74,6 +74,20 @@ x <- unique(data_filtered$CVTOT)
 y <- data_filtered$GB.Seqs
 ```
 
+Breve análisis acerca de que posiciones presentar mayor número de variaciones corregidas y cuales mayor número de haplogrupos distintos (estudios al 90\% y al 95\%).
+
+```{r}
+y <- data_filtered$GB.Seqs
+alphas <- c(0.025,0.05)
+for (a in alphas)
+{
+  upper_bound <- quantile(y, 1 - a);upper_bound
+  outlier_ind <- which(y > upper_bound)
+  data_tmp <- data_filtered[outlier_ind,]
+  write.csv(data_tmp, paste("../output_r/ssu_",a,".csv"), sep = ',')
+}
+```
+
 ## Análisis paramétricos:
 
 Repetimos los experimentos realizados para el caso original pero tras haber eliminado los casos con valores asignados de -1 en el índice de conservación (CVTOT).

@@ -3,6 +3,7 @@ import sys, re
 import pandas as pd
 from utils.utils import *
 import urllib.request
+import json
 
 control_lsu, haplogrupos_control = '../control/DV-gen-LSU.csv', '../control/haplogrupos.tsv'
 control_ssu = '../control/DV-gen-SSU.csv'
@@ -24,7 +25,7 @@ def preprocess_df(df):
     df['Reference Base'] = reference
     frequencies = []
     for i in df['GB Freq‡']:
-        frequencies.append(float(i[:-1]))
+        frequencies.append(float(i.replace('%','')))
     df['GB Freq‡'] = frequencies
 
 def add_cv(df_section, df_control, haplogroups = None):
@@ -68,6 +69,7 @@ def get_haplogroups(df, suffix = 'lsu', df_haplogroups = None):
     base query = https://www.mitomap.org/cgi-bin/index_mitomap.cgi?title=Coding+Polymorphism+G-A+at+rCRS+position+2701&pos=2701&ref=G&alt=A&purge_type=
     '''
     assert df_haplogroups is not None
+
     haplogrupos = df_haplogrupos['Top Level Haplogroup'].values
     base_query = 'https://www.mitomap.org/cgi-bin/index_mitomap.cgi?title=Coding+Polymorphism+\-\+at+rCRS+position+\&pos=\&ref=\&alt=\&purge_type='
     base_query_split = base_query.split('\\')
@@ -104,7 +106,8 @@ def get_haplogroups(df, suffix = 'lsu', df_haplogroups = None):
             key_change = str(data[0]+data[1])
             print(key_change)
             for haplogroup in haplogroups:
-                set_positions = set([i.strip() for i in df_haplogroups.loc[haplogroup]['Ancestral Marker Motif †'].strip().split(',')])
+                set_positions = set([i.strip() for i in df_haplogroups.loc[haplogroup]['Ancestral Marker Motif'].strip().split(',')])
+                set_positions = set_positions | set([i.strip() for i in df_haplogroups.loc[haplogroup]['HG Markers'].strip().split(',')])
                 if key_change in set_positions:
                     print('change')
                     df.at[index,'Nb.Seqs.correction'] += 1
@@ -115,10 +118,102 @@ def get_haplogroups(df, suffix = 'lsu', df_haplogroups = None):
     df.to_csv('../output/'+suffix+'_haplogroups.csv')
     return df, haplogrupos
 
+'''
+Get all variants and classify based on individual
+'''
+def get_whole_data():
+    file = '../data/coocurrence/coocurrence.tvs'
+    print('Processing coocurrence data from: ', )
+    df_whole_variants = pd.read_csv(file, sep='\t')
+    preprocess_df(df_whole_variants)
+    base_query = 'https://www.mitomap.org/cgi-bin/index_mitomap.cgi?title=Coding+Polymorphism+\-\+at+rCRS+position+\&pos=\&ref=\&alt=\&purge_type='
+    base_query_split = base_query.split('\\')
+    dir_json = 'tmp/json/'
+
+    print('Dir htmls: ', dir_json)
+    if not Utils.exists(dir_json):
+        Utils.mkdir(dir_json)
+    files = Utils.get_files(dir_json, extension=['json'])
+
+    variants, variants_json = dict(), '../tmp/json/variants.json'
+    min_pos = None
+    if not len(files) != 0:
+        cols = ['Position', 'Mutated Base', 'Reference Base']
+        num_rows = 0
+        for index, row in df_whole_variants.iterrows():
+            data = (str(int(row[cols[0]])), str(row[cols[1]]), str(row[cols[2]]))
+            if min_pos is not None:
+                if min_pos > int(data[0]):
+                    continue
+            elif min_pos == int(data[0]) and Utils.exists(variants_json):
+                    with open(variants_json,'r') as f:
+                        variants = json.load(f)
+                    continue
+            custom_query = ''.join(base_query_split[0] + data[2] + base_query_split[1] +
+                                   data[1] + base_query_split[2] + data[0] + base_query_split[3] + data[0]
+                                   + base_query_split[4] + data[2] + base_query_split[5] + data[1] + base_query_split[6])
+            fp = urllib.request.urlopen(custom_query)
+            print("Query: ", custom_query)
+            mybytes = fp.read()
+            my_web_page = mybytes.decode("utf8")
+            fp.close()
+            html_file = 'variant_' + str(index) + '.html'
+            '''with open(dir_htmls + html_file, "w+") as f:
+                f.write(my_web_page)'''
+            gen_ids = [my_web_page[m.end(0):m.end(0) + 10]  for m in re.finditer('nuccore/', my_web_page)]
+            haplogroups = [my_web_page[m.end(0):m.end(0) + 2] if my_web_page[m.end(0)] == 'H' and my_web_page[
+                m.end(0) + 1] == 'V' else my_web_page[m.end(0):m.end(0) + 1]
+            if my_web_page[m.end(0)] != 'L' else my_web_page[m.end(0):m.end(0) + 2] for m in
+                           re.finditer('haplogroup=', my_web_page)]
+            for i,gen_id in enumerate(gen_ids):
+                if gen_id in variants.keys():
+                    variants[gen_id][data[0]+'_'+data[1]] = 1
+                else:
+                    variants[gen_id] = {data[0]+'_'+data[1]:1}
+                    variants[gen_id]['Haplogroup'] = haplogroups[i]
+            if min_pos is not None:
+                if int(data[0]) < min_pos:
+                    with open(variants_json, 'w') as fp:
+                        json.dump(variants, fp)
+                        print('Dumped into ', variants_json)
+            '''if num_rows > 5 and bool(variants):
+                break'''
+            num_rows += 1
+        with open(variants_json, 'w') as fp:
+            json.dump(variants, fp)
+            print('Dumped into ', variants_json)
+        df = pd.DataFrame.from_dict(variants, orient = 'index')
+        df.to_csv('../output/variants_genBankId.csv')
+    else:
+        print('Assuming information already available')
+        with open(variants_json, 'r') as f:
+            variants = json.load(f)
+        df = pd.DataFrame.from_dict(variants, orient='index')
+        df = pd.read_csv('../output/variants_genBankId.csv', sep = ',')
+    return df
+
+def __store_haplogroups(df_haplogroups):
+    import re
+    haplogroups_dict = {}
+    for index, row in df_haplogroups.iterrows():
+        for i in row['Ancestral Marker Motif'].split(','):
+            i_split = re.split('(\d+)',i.strip())
+            if index not in haplogroups_dict.keys():
+                haplogroups_dict[index] = {}
+            haplogroups_dict[index][i_split[1]+'_'+i_split[2]] = 1
+        for i in row['HG Markers'].split(','):
+            i_split = re.split('(\d+)',i.strip())
+            if index not in haplogroups_dict.keys():
+                haplogroups_dict[index] = {}
+            if len(i_split) > 2:
+                haplogroups_dict[index][i_split[1]+'_'+i_split[2]] = 1
+    pd.DataFrame.from_dict(haplogroups_dict, orient = 'index').to_csv('../output/haplogroups_matrix.csv')
+
 if __name__ == '__main__':
     #pd.set_option('display.max_rows', None)
     mitomap, tsv_read = [], False
-    print('python mtDNA.py --mitomap comma_separated_files --somatic comma_separated_files')
+    process_whole = False
+    print('python mtDNA.py --mitomap comma_separated_files --somatic comma_separated_files --process-whole-variants')
     df_control_lsu = pd.read_csv(control_lsu, sep = ';')
     df_control_lsu['Genomic'] = pd.to_numeric(df_control_lsu['Genomic'].fillna(-1))
     print(df_control_lsu)
@@ -127,12 +222,15 @@ if __name__ == '__main__':
     print(df_control_ssu)
     df_haplogrupos = pd.read_csv(haplogrupos_control, sep = '\t')
     df_haplogrupos_indexed = df_haplogrupos.set_index('Top Level Haplogroup')
+    __store_haplogroups(df_haplogrupos_indexed)
     for i in sys.argv:
         if tsv_read:
             mitomap = i.strip().split(',')
             tsv_read = False
         if i == '--mitomap':
             tsv_read = True
+        if i == '--process-whole-variants':
+            process_whole = True
     ssu_df, lsu_df = pd.DataFrame(), pd.DataFrame()
     if len(mitomap) != 0:
         print('MitoMap pages: ', mitomap)
@@ -156,3 +254,6 @@ if __name__ == '__main__':
         results_df = add_cv(lsu_df, df_control_lsu, haplogroups)
         results_df.to_csv('../output/lsu_df.csv')
         print('LSU MitoMap information: ', results_df)
+
+    if process_whole:
+        get_whole_data()
