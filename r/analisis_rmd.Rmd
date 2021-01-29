@@ -89,6 +89,36 @@ for (a in alphas)
   data_tmp <- data_filtered[outlier_ind,]
   write.csv(data_tmp, paste("../output_r/lsu_",a,".csv"), sep = ',')
 }
+
+### Residuos con variacion
+length(unique(data[data$GB.Seqs.Original!=0,]$Genomic))
+length(unique(data[data$GB.Seqs.Original!=0,]$Genomic))/1559
+## Total
+sum(data$GB.Seqs.Original)
+87136/1559
+
+## Maximo
+max(data$GB.Seqs.Original)
+data[data$GB.Seqs.Original == max(data$GB.Seqs.Original),]$Genomic
+# Variantes en regiones
+length(unique(data[(data$CVTOT >= 0) & (data$CVTOT < 1),]$Genomic))
+length(unique(data[(data$CVTOT >= 1) & (data$CVTOT < 1.5) ,]$Genomic))
+length(unique(data[(data$CVTOT >= 1.5) & (data$CVTOT < 1.9) ,]$Genomic))
+length(unique(data[(data$CVTOT >= 1.9),]$Genomic))
+
+# Total variaciones
+sum(na.omit(data[(data$CVTOT <0),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 0) & (data$CVTOT < 1),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 1) & (data$CVTOT < 1.5),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 1.5) & (data$CVTOT < 1.9),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 1.9),]$GB.Seqs.Original))
+
+# Numero de sitios con variacion
+length(unique(na.omit(data[(data$CVTOT < 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 0) & (data$CVTOT < 1) & (data$GB.Seqs!= 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 1) & (data$CVTOT < 1.5) & (data$GB.Seqs!= 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 1.5) & (data$CVTOT < 1.9) & (data$GB.Seqs!= 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 1.9) & (data$GB.Seqs!= 0),])$Genomic))
 ```
 
 ## Análisis paramétricos:

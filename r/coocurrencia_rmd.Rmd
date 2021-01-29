@@ -40,6 +40,38 @@ Tenemos:
   * 8122 posiciones con variaciones, de las cuales 290 tienen más de un 1% de unos en sus columnas (es decir variaciones).
   * 1236097 variaciones en total
   
+## Exploración de los datos:
+
+```{r}
+## Variantes por haplogrupo
+apply(haplogroups[2:dim(haplogroups)[2]], 1, sum)
+## Numero de individuos por haplogrupo
+data_variantes%>%group_by(Haplogroup)%>%count()
+data_agg_haplo = data.matrix(apply(haplogroups[2:dim(haplogroups)[2]],2,sum))
+## Haplogrupos medio por variante en haplogrupo y variantes unicas por haplogrupo
+y_shape <- dim(haplogroups)[2]
+for (i in seq(1:dim(haplogroups)[1]))
+{
+  print(paste('Haplogroup: ',haplogroups[i,1]))
+  x_row <- data.matrix(haplogroups[i,seq(2,y_shape)])
+  print(x_row%*%data_agg_haplo/sum(x_row))
+  print(sum(data_agg_haplo[x_row == 1] == 1))
+}
+## Box plot
+data_variantes_tmp <- data_variantes
+data_variantes_tmp$X <- NULL
+data_variantes_tmp$Haplogroup <- NULL
+total <- apply(data_variantes_tmp,1, sum)
+Q <- quantile(total, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(total)
+up <-  Q[2]+1.5*iqr # Upper Range  
+low<- Q[1]-1.5*iqr # Lower Range
+data_variantes_tmp$Haplo <- data_variantes$Haplogroup
+data_variantes_tmp$total <- total
+data_variantes_tmp <- data_variantes_tmp[data_variantes_tmp$total < up,]
+boxplot(data_variantes_tmp$total~data_variantes_tmp$Haplo, xlab = 'Haplogrupo', ylab = 'Número de variaciones por individuo')
+```
+  
 ## SVD (truncado)
 
 SVD es una técnica de descomposición matricial ampliamente usada en sistemas de recomendación. Esta se basa en dividir una matriz $M_{m x n}$ en tres matrices de modo que $M = U\Sigma V^T$ donde:

@@ -46,6 +46,7 @@ data$CVTOT <- as.numeric(as.character(data$CVTOT))
 data$GB.Seqs <- na.omit(as.numeric(as.character(data$GB.Seqs)))
 data$GB.Seqs.Corrected <- na.omit(as.numeric(as.character(data$GB.Seqs.Corrected)))
 # Corregimos el impacto del haplogrupo:
+data$GB.Seqs.Original <- data$GB.Seqs
 data$GB.Seqs <- data$GB.Seqs.Corrected
 data$Log.GB.Seqs <- log(data$GB.Seqs + 1)
 data$Bin.GB.Seqs <- numeric(length(data$GB.Seqs))
@@ -86,6 +87,37 @@ for (a in alphas)
   data_tmp <- data_filtered[outlier_ind,]
   write.csv(data_tmp, paste("../output_r/ssu_",a,".csv"), sep = ',')
 }
+
+### Residuos con variacion
+length(unique(data[data$GB.Seqs.Original!=0,]$Genomic))
+length(unique(data[data$GB.Seqs.Original!=0,]$Genomic))/954
+## Total
+sum(data$GB.Seqs.Original)
+sum(data$GB.Seqs.Original)/954
+
+## Maximo
+max(data$GB.Seqs)
+data[data$GB.Seqs == max(data$GB.Seqs),]$Genomic
+# Variantes en regiones
+length(unique(data[(data$CVTOT < 0),]$Genomic))
+length(unique(data[(data$CVTOT >= 0) & (data$CVTOT < 1),]$Genomic))
+length(unique(data[(data$CVTOT >= 1) & (data$CVTOT < 1.5) ,]$Genomic))
+length(unique(data[(data$CVTOT >= 1.5) & (data$CVTOT < 1.9) ,]$Genomic))
+length(unique(data[(data$CVTOT >= 1.9),]$Genomic))
+
+# Total variaciones
+sum(na.omit(data[(data$CVTOT <0),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 0) & (data$CVTOT < 1),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 1) & (data$CVTOT < 1.5),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 1.5) & (data$CVTOT < 1.9),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 1.9),]$GB.Seqs.Original))
+
+# Numero de sitios con variacion
+length(unique(na.omit(data[(data$CVTOT < 0) & (data$GB.Seqs != 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 0) & (data$CVTOT < 1) & (data$GB.Seqs!= 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 1) & (data$CVTOT < 1.5) & (data$GB.Seqs!= 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 1.5) & (data$CVTOT < 1.9) & (data$GB.Seqs!= 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 1.9) & (data$GB.Seqs!= 0),])$Genomic))
 ```
 
 ## Análisis paramétricos:

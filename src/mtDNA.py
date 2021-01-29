@@ -33,8 +33,12 @@ def add_cv(df_section, df_control, haplogroups = None):
     Method to add cv:
         * Column: Genomic
     '''
+    print(haplogroups)
     df_control.groupby('Genomic').first()
     cvtot, cvmit, appearences, positions, genomic, corrected_appearences, cells_haplogroups = [], [], [], [], [], [], []
+    haplogroups_ex = df_section.iloc[0].loc[haplogroups]
+    for i,v in enumerate(haplogroups_ex):
+        haplogroups_ex[i] = 0
     for index, row in df_control.iterrows():
         genomic_pos = row['Genomic']
         df_tmp = df_section.loc[df_section['Position'] == genomic_pos]
@@ -49,10 +53,17 @@ def add_cv(df_section, df_control, haplogroups = None):
             appearences.append(0)
             corrected_appearences.append(0)
             genomic.append(genomic_pos)
-            cells_haplogroups.append(np.zeros(len(haplogroups)))
+            cells_haplogroups.append(haplogroups_ex)
     df_result = pd.DataFrame({'CVTOT':cvtot,'GB Seqs':appearences,'GB.Seqs.Corrected':corrected_appearences,'Genomic':genomic})
+    cells_haplogroups = pd.DataFrame(data = cells_haplogroups, columns = haplogroups)
+    cells_columns = cells_haplogroups.columns.values
+    df_result_columns = df_result.columns.values
+    columns = np.append(df_result_columns , cells_columns)
     if haplogroups is not None:
-        return pd.concat([df_result, pd.DataFrame(data = cells_haplogroups, columns = haplogroups)], axis = 1)
+        df_tmp =  pd.concat([df_result.reset_index(), cells_haplogroups.reset_index()],axis = 1)
+        df_tmp = df_tmp.drop(df_tmp.columns[0],axis = 1)
+        df_tmp.columns = columns
+        return df_tmp
     else:
         return df_result
 '''
@@ -115,6 +126,7 @@ def get_haplogroups(df, suffix = 'lsu', df_haplogroups = None):
     else:
         print('Assuming information already available')
         df = pd.read_csv('../output/'+suffix+'_haplogroups.csv', sep = ',')
+        df = df.loc[:, ~df.columns.str.match("Unnamed")]
     df.to_csv('../output/'+suffix+'_haplogroups.csv')
     return df, haplogrupos
 
@@ -128,7 +140,7 @@ def get_whole_data():
     preprocess_df(df_whole_variants)
     base_query = 'https://www.mitomap.org/cgi-bin/index_mitomap.cgi?title=Coding+Polymorphism+\-\+at+rCRS+position+\&pos=\&ref=\&alt=\&purge_type='
     base_query_split = base_query.split('\\')
-    dir_json = 'tmp/json/'
+    dir_json = '../tmp/json/'
 
     print('Dir htmls: ', dir_json)
     if not Utils.exists(dir_json):
@@ -249,6 +261,7 @@ if __name__ == '__main__':
         print('SSU MitoMap information: ', results_df)
         # Process lsu
         preprocess_df(lsu_df)
+        lsu_df = lsu_df.loc[:, ~lsu_df.columns.str.match("Unnamed")]
         # Getting haplogroups
         lsu_df, haplogroups = get_haplogroups(lsu_df, df_haplogroups = df_haplogrupos_indexed, suffix = 'lsu')
         results_df = add_cv(lsu_df, df_control_lsu, haplogroups)
