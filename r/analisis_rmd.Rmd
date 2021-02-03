@@ -273,7 +273,7 @@ for (a in l_a)
 
 ```{r}
 ## Modelos paramétricos via GAMLSS (Generalize Aditive models for location scale and shape)
-l_a <- c(0.0)
+l_a <- c()
 x <- sort(x)
 for (a in l_a){
   # Eliminamos datos fuera de lugar
@@ -454,14 +454,13 @@ Análisis via curvas spline:
 splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT,columnay = 'Apariciones', type = 'regular') {
   x_l <- DataSub[,columna_x]
   y_l <- DataSub[,columna_y]
-  if (type == 'b' || type == 'p'){
-    ind_x <- sort(x_l, index.return = T)$ix
-    x_l <- x_l[ind_x]
-    y_l <- y_l[ind_x]
-  }
+  # Sorted
+  ind_x <- sort(x_l, index.return = T)$ix
+  x_l <- x_l[ind_x]
+  y_l <- y_l[ind_x]
 	# Fit spline to data, with cross-validation to pick lambda
   if (type == 'regular'){
-	  spl<-smooth.spline(x=x_l,y=y_l,df=df)
+	  spl<-gam(y_l~s(x_l, bs = "cr", fx = TRUE))
   }
   if (type == 'b')
   {
@@ -474,11 +473,12 @@ splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT,column
     spl <- gam(y_l ~ s(x_l, k=df, bs = "cr"))
     #gam.check(spl)
   }
+  print(AIC(spl))
 	Grid <- seq(from=min(x_l),to=max(x_l),length.out=m)
-	if (type == 'regular'){
-	  Main<-predict(spl,x=Grid)$y
-	  Estim<-matrix(nrow=m,ncol=B)}
-	if (type == 'b' || type == 'p'){
+	#if (type == 'regular'){
+	 # Main<-predict(spl,x=Grid)$y
+	  #Estim<-matrix(nrow=m,ncol=B)}
+	if (type == 'b' || type == 'p' || type == 'regular'){
 	  Grid <- x_l
 	  Main<-predict(spl)
 	  Estim <- matrix(nrow = dim(DataSub)[1], ncol = B)}
@@ -486,15 +486,14 @@ splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT,column
 		DataRes<-DataSub[sample(dim(DataSub)[1],replace=TRUE),c(columna_x,columna_y)]
 		x_loc <- DataRes[,columna_x]
     y_loc <- DataRes[,columna_y]
-		if (type == 'b' || type == 'p')
-		{
-		  ind_x <- sort(x_loc, index.return = T)$ix
-      x_loc <- x_loc[ind_x]
-      y_loc <- y_loc[ind_x]
-		}
+    # sorted
+	  ind_x <- sort(x_loc, index.return = T)$ix
+    x_loc <- x_loc[ind_x]
+    y_loc <- y_loc[ind_x]
 		# Fit spline to data, with cross-validation to pick lambda
-		if (type == 'regular')
-		  spl <- smooth.spline(x=x_loc,y=y_loc,df=df)
+		if (type == 'regular'){
+		  spl<-gam(y_loc~s(x_loc, bs = "cr", fx = TRUE))
+		}  
 		if (type == 'b'){
 		  nodos <- seq(min(x_loc), max(x_loc), by = m)
       x_loc_diseno <- bs(x = x_loc, knots = nodos)
@@ -504,10 +503,10 @@ splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT,column
     {
       spl <- gam(y_loc ~ s(x_loc, k=df, bs = "cr"))
     }
-		if (type == 'regular'){
-		  Grid <- seq(from=min(x_loc),to=max(x_loc),length.out=m)
-		  Estim[,i]<-predict(spl,x=Grid)$y}
-		if (type == 'b' || type == 'p'){
+		#if (type == 'regular'){
+		 # Grid <- seq(from=min(x_loc),to=max(x_loc),length.out=m)
+		  #Estim[,i]<-predict(spl,x=Grid)$y}
+		if (type == 'b' || type == 'p' || type == 'regular'){
 		  Estim[,i]<-predict(spl)}
 	} 
 	Lower<-2*Main-apply(Estim,1,quantile,probs=1-alpha/2)
@@ -549,7 +548,7 @@ for (a in l_a)
   par(mfrow=c(1,2))
   for (df in dfs)
   {
-    splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,300,0.025,1000,paste("Smoothing Spline Regression ",df,'(dfs) Filtro = ',a), columnay = 'Log(Apariciones +1)')
+    splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,300,0.025,100,paste("Smoothing Spline Regression ",df,'(dfs) Filtro = ',a), columnay = 'Log(Apariciones +1)')
     #splines_adjust(data_tmp, 'GB.Seqs', 'CVTOT', df,300,0.025,1000,paste("Smoothing Spline Regression ",df,'(dfs) Filtro = ',a), columnay = 'Apariciones')
   }
 }
@@ -603,7 +602,7 @@ for (a in l_a){
   for (k in seq(5,30, by = 5))
   {
     spl <- gam(data_tmp$Log.GB.Seqs ~ s(data_tmp$CVTOT, k=k, bs = "tp"))
-    print(gam.check(spl))
+    #print(gam.check(spl))
   }
 }
 # A la vista de los resultados ofrecidos por gam.check:
@@ -635,7 +634,7 @@ for (a in l_a){
   i <- 1
   for (df in dfs)
   {
-    spls[i] <- splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,6,0.5,1000,paste("B-Spline Regression ",df,'(K) alpha = ',a), type = 'p')
+    spls[i] <- splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,6,0.5,1000,paste("P-Spline Regression ",df,'(K) alpha = ',a), type = 'p')
     i <- i + 1
   }
 }
@@ -658,7 +657,7 @@ data_filtered$Bin.GB.Seqs[data_filtered$GB.Seqs > 0] <- 1
 plot(data_filtered$CVTOT,data_filtered$Bin.GB.Seqs,pch=16,col="blue",ylim=c(0,1),xlab="CvIndex",ylab="Bin(Appearances)")
 # Regresión logística clásica
 mod_logit <- glm(Bin.GB.Seqs~CVTOT, family = binomial(link = 'logit'), data = data_filtered)
-summary(mod_logit)
+print(AIC(mod_logit))
 # Predictions
 x_pred <- data.frame(CVTOT = seq(-1,2, length = 1000))
 pred <- predict(mod_logit, x_pred,se.fit = T, type = 'response')
@@ -670,12 +669,12 @@ lines(x_pred$CVTOT, pred$fit - pred$se.fit*1.96, col = 'red', lty = 2)
 idx <- sort(data_filtered$CVTOT,index.return=TRUE)$ix
 x_sort <- data_filtered$CVTOT[idx]
 y_sort=data_filtered$Bin.GB.Seqs[idx]
-lo <- loess(y_sort~x_sort)
+lo <- gamlss(y_sort~lo(~x_sort), family = 'BI')
 pred_lo <- predict(lo, se = TRUE)
 lines(x_sort,pred_lo$fit,col="green",lwd=2)
 lines(x_sort,pred_lo$fit+pred_lo$se.fit*1.96,col="green",lwd=1, lty = 2)
 lines(x_sort,pred_lo$fit-pred_lo$se.fit*1.96,col="green",lwd=1, lty = 2)
-
+print(AIC(lo))
 # Regresión logística local
 h <- h.select(data_filtered$CVTOT, data_filtered$Bin.GB.Seqs)
 log_loc <- sm.binomial(data_filtered$CVTOT,data_filtered$Bin.GB.Seqs,h=h,add=T,col="red",lwd=2,pch=28,ylim=c(0,0.3))
