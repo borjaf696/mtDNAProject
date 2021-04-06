@@ -1,0 +1,827 @@
+---
+title: "Análisis mtDNA: SSU"
+author: "Borja Freire Castro"
+date: "23/10/2020"
+output:
+  html_document:
+    fig_width: 10
+    fig_height: 6
+---
+
+El documento trata de explicar los análisis realizados y ofrecer una visualización de estos de cara a su evaluación. 
+Indicaciones:
+
+  * Los datos con índices de conservación se han eliminado del conjunto de datos global (apartándolos para un potencial análisis univariante).
+  * Para los datos se muestra tanto su versión normal como la logarítmica, y adicionalmente para los métodos logísticos se ha dicotomizado el conjunto de datos (unicamente bajo el criterio de apariciones >0, puesto que incrementar más el umbral  bajaba en exceso la cantidad de datos en la muestra)
+  * Los modelos empleados los podemos diferenciar en paramétricos: logística, poisson, binomial y zeros inflados; y no paramétricos: logística local, splines (smoothing, B y P) y loess. Además, se ha incorporado la regresión cuantil.
+  
+En líneas generales parece que existe una tendencia al crecimiento en el número de apariciones a medida que crece el índice de conservación (CV), hasta un CV aproximado de 1.0 y luego comienza nuevamente a caer (esto se ve especialmente en el caso de ajustes no paramétricos con la variable discretizada). Este crecimiento siempre está limitado a la franja 0:1, para todos los valores de Apariciones, log(Apariciones + 1) y dicotómica.
+
+```{r echo = FALSE, comment=FALSE, warning=FALSE}
+require(ggplot2)
+require(pscl)
+require(boot)
+require(VGAM)
+require(gamlss)
+require(gamlss.dist)
+require(locfit)
+require(KernSmooth)
+require(MASS)
+require(quantreg)
+require(splines)
+require(mgcv)
+require(sm)
+require(arules)
+```
+
+Carga y preprocesamiento de los datos.
+
+El histograma de número de apariciones es poco explicativo dado que la cantidad de Apariciones iguales a 0, es extremadamente alta. Se muestran adicionalmente los histogramas para apariciones > 0 y > 1, aunque pese a empezar a mostrar algo de curva sigue habiendo un desbalanceo demasiado elevado.
+
+```{r}
+data <- na.omit(read.csv('../output/ssu_df_cancer.csv', sep = ',', dec = '.', header = T))
+dim(data)
+head(data)
+data$CVTOT <- as.numeric(as.character(data$CVTOT))
+data$GB.Seqs <- na.omit(as.numeric(as.character(data$GB.Seqs)))
+data$GB.Seqs.Corrected <- na.omit(as.numeric(as.character(data$GB.Seqs)))
+# Corregimos el impacto del haplogrupo:
+data$GB.Seqs.Original <- data$GB.Seqs
+data$GB.Seqs <- data$GB.Seqs.Corrected
+data$Log.GB.Seqs <- log(data$GB.Seqs + 1)
+data$Bin.GB.Seqs <- numeric(length(data$GB.Seqs))
+data <- na.omit(data)
+data_neg <- data[data$CVTOT == -1,]
+data_filtered <- data[data$CVTOT != -1,]# Haplogrupos diferentes - 6- 36
+#data_filtered$distinct_haplogroups <- apply(data_filtered[6:36], 1,function(x) sum(x > 0))
+# Visualización de los hist de data_filtered
+sum(data_filtered$GB.Seqs == 0)
+sum(data_filtered$GB.Seqs != 0)
+par(mfrow = c(1,3))
+hist(data_filtered$GB.Seqs, xlab = 'Apariciones', breaks = 'fd', freq = F, main = 'Histograma apariciones')
+hist(data_filtered$GB.Seqs[data_filtered$GB.Seqs > 0], xlab = 'Apariciones', breaks = 'fd', freq = T,main = 'Histograma apariciones (apariciones > 0)')
+hist(data_filtered$GB.Seqs[data_filtered$GB.Seqs > 1], xlab = 'Apariciones', breaks = 'fd', freq = T,main = 'Histograma apariciones (apariciones > 1)')
+par(mfrow = c(1,2))
+hist(data_filtered$CVTOT[data_filtered$GB.Seqs != 0],
+     breaks = 'fd', freq = F, xlab = 'CVindex Apariciones > 0', main = 'Histograma CV(apariciones > 0)')
+#hist(data_filtered$CVTOT[data_filtered$GB.Seqs == 0],
+#     breaks = 'fd', freq = F, xlab = 'CVindex Apariciones == 0', main = 'Histograma CV(apariciones == 0)')
+summary(data_neg)
+summary(data_filtered)
+par(mfrow = c(1,1))
+plot(data_filtered$CVTOT,data_filtered$GB.Seqs,pch=1,ylim = c(0,30),
+     xlab="CVTOT",ylab="Appearances", main = 'Apariciones frente a CVindex (filtro de -1 aplicado)')
+x <- unique(data_filtered$CVTOT)
+y <- data_filtered$GB.Seqs
+```
+
+Breve análisis acerca de que posiciones presentar mayor número de variaciones corregidas y cuales mayor número de haplogrupos distintos (estudios al 90\% y al 95\%).
+
+```{r eval=FALSE, include=FALSE}
+y <- data_filtered$GB.Seqs
+alphas <- c(0.025,0.05)
+for (a in alphas)
+{
+  upper_bound <- quantile(y, 1 - a);upper_bound
+  outlier_ind <- which(y > upper_bound)
+  data_tmp <- data_filtered[outlier_ind,]
+  write.csv(data_tmp, paste("../output_r/ssu_",a,".csv"), sep = ',')
+}
+
+### Residuos con variacion
+length(unique(data[data$GB.Seqs.Original!=0,]$Genomic))
+length(unique(data[data$GB.Seqs.Original!=0,]$Genomic))/954
+## Total
+sum(data$GB.Seqs.Original)
+sum(data$GB.Seqs.Original)/954
+
+## Maximo
+max(data$GB.Seqs)
+data[data$GB.Seqs == max(data$GB.Seqs),]$Genomic
+# Variantes en regiones
+length(unique(data[(data$CVTOT < 0),]$Genomic))
+length(unique(data[(data$CVTOT >= 0) & (data$CVTOT < 1),]$Genomic))
+length(unique(data[(data$CVTOT >= 1) & (data$CVTOT < 1.5) ,]$Genomic))
+length(unique(data[(data$CVTOT >= 1.5) & (data$CVTOT < 1.9) ,]$Genomic))
+length(unique(data[(data$CVTOT >= 1.9),]$Genomic))
+
+# Total variaciones
+sum(na.omit(data[(data$CVTOT <0),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 0) & (data$CVTOT < 1),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 1) & (data$CVTOT < 1.5),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 1.5) & (data$CVTOT < 1.9),]$GB.Seqs.Original))
+sum(na.omit(data[(data$CVTOT >= 1.9),]$GB.Seqs.Original))
+
+# Numero de sitios con variacion
+length(unique(na.omit(data[(data$CVTOT < 0) & (data$GB.Seqs != 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 0) & (data$CVTOT < 1) & (data$GB.Seqs!= 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 1) & (data$CVTOT < 1.5) & (data$GB.Seqs!= 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 1.5) & (data$CVTOT < 1.9) & (data$GB.Seqs!= 0),])$Genomic))
+length(unique(na.omit(data[(data$CVTOT >= 1.9) & (data$GB.Seqs!= 0),])$Genomic))
+```
+
+## Análisis paramétricos:
+
+Repetimos los experimentos realizados para el caso original pero tras haber eliminado los casos con valores asignados de -1 en el índice de conservación (CVTOT).
+
+  * Filtrado de datos superiores: 0%, 1% y 5%
+  * Ajustes:
+    * Poisson
+    * QuasiPoisson (estimación del parámetro de sobredispersión)
+    * Zeros Inflados:
+      * Poisson
+      * Geométrica
+      * Link: logit
+    * Binomial Negativa
+
+```{r eval=FALSE, include=FALSE}
+## Conditional variance - modo univariante pensar en el modo multi
+con_var <- function(df, residuos, col_y, col_x, new_data, FUN = glm, ...)
+{
+  df$con_var_up <- df[,col_y]+residuos^2
+  df$con_var_down <- df[,col_y] - residuos^2
+  print(length(df[,col_x]))
+  print(length(df$con_var_up))
+  model_adjust_up <- FUN(df[,'con_var_up'] ~ df[,col_x], ...)
+  model_adjust_down <- FUN(df[,'con_var_down'] ~ df[,col_x], ...)
+  return(c(sqrt(predict(model_adjust_up, newdata = new_data)),
+           sqrt(predict(model_adjust_down, newdata= new_data))))
+}
+
+## Estudios paramétricos:
+### GLM
+## Poisson
+## Geometrica
+## BN
+# Poisson + ZerosInflated
+## Caso 1: Datos completos
+## Caso 2: Datos filtrados al 1% superior
+## Caso 3: Datos filtrados al 5$ superior
+l_a <- c(0, 0.01, 0.05)
+for (a in l_a)
+{
+  # Eliminamos datos fuera de lugar
+  lower_bound <- quantile(y, 0.00);lower_bound
+  upper_bound <- quantile(y, 1 - a);upper_bound
+
+  outlier_ind <- which(y < lower_bound | y > upper_bound)
+  if (!is.na(outlier_ind[1]))
+    data_tmp <- data_filtered[-outlier_ind,]
+  else
+    data_tmp <- data_filtered
+
+  # Comprobamos datos
+  summary(data_tmp)
+  head(data_tmp)
+  dim(data_tmp)
+  # Analisis visual
+  #windows()
+  hist(data_tmp$GB.Seqs, freq = F, breaks = 'fd')
+
+  #windows()
+  plot(data_tmp[,'CVTOT'],data_tmp[,'GB.Seqs'],
+       pch=16,col="blue",ylim=c(-2,100),xlab="CvIndex",ylab="Appearances",main=paste("Filtro: ",a))
+  ## Regresión paramétrica - poisson (sistema de recuento, con valores > 0, makes sense) - sin tocar 0s
+  RegZero_s_inf <- glm(GB.Seqs ~ CVTOT , data = data_tmp,family = poisson)
+  RegZero_s_inf_theta <- glm(GB.Seqs ~ CVTOT,  data = data_tmp, family = quasipoisson(link = "log"))
+  summary(RegZero_s_inf_theta)
+  summary(RegZero_s_inf)
+  x<-seq(min(data_tmp[,'CVTOT']),max(data_tmp[,'CVTOT']),by=0.01)
+  Pr_s_inf<-predict(RegZero_s_inf, newdata=data.frame("CVTOT"=x),se.fit=TRUE)
+  lines(x,Pr_s_inf$fit,col="green",type="l",lwd=2)
+  # El ajuste va malament
+  f1 <- formula(GB.Seqs ~ CVTOT | 1 ) # Los 0's son estructurales
+  f2 <- formula(GB.Seqs ~ CVTOT | CVTOT) # Los 0s dependen de CVTOT
+  f3 <- formula(GB.Seqs ~ CVTOT)
+  RegZero_inf_sP_c1 <- zeroinfl(f1 ,data= data_tmp, dist="poisson", link = "logit")
+  RegZero_inf_sP_c2 <- zeroinfl(f2, data = data_tmp, dist="poisson", link = "logit")
+  RegZero_inf_sP_c3 <- zeroinfl(f3, data = data_tmp, dist="poisson", link = "logit")
+  RegZero_inf_sP_def <- zeroinfl(f3, data = data_tmp)
+  RegZero_inf_sP_geo1 <- zeroinfl(f1, data = data_tmp, dist = "geometric")
+  RegZero_inf_sP_geo2 <- zeroinfl(f2, data = data_tmp, dist = "geometric")
+  RegZero_inf_sP_ngbin_1 <- zeroinfl(f1, data = data_tmp, dist = "negbin")
+  RegZero_inf_sP_ngbin_2 <- zeroinfl(f2, data = data_tmp, dist = "negbin")
+  summary(RegZero_inf_sP_c1)
+  summary(RegZero_inf_sP_c2)
+  summary(RegZero_inf_sP_c3)
+  summary(RegZero_inf_sP_def)
+  summary(RegZero_inf_sP_geo1)
+  summary(RegZero_inf_sP_geo2)
+  summary(RegZero_inf_sP_ngbin_1)
+  summary(RegZero_inf_sP_ngbin_2)
+  Pr_inf_sP_c1<-predict(RegZero_inf_sP_c1,
+                        newdata=data.frame("CVTOT"=x),se.fit=TRUE, type = "response")
+  Pr_inf_sP_c2<-predict(RegZero_inf_sP_c2,
+                        newdata=data.frame("CVTOT"=x),se.fit=TRUE,type = "response")
+  Pr_inf_sP_c3<-predict(RegZero_inf_sP_c3,
+                        newdata=data.frame("CVTOT"=x),se.fit=TRUE,type = "response")
+  Pr_inf_sP_def<-predict(RegZero_inf_sP_def,
+                         newdata=data.frame("CVTOT"=x),se.fit=TRUE,type = "response")
+  Pr_inf_sP_geo1<-predict(RegZero_inf_sP_geo1,
+                         newdata=data.frame("CVTOT"=x),se.fit=TRUE,type = "response")
+  Pr_inf_sP_geo2<-predict(RegZero_inf_sP_geo2,
+                         newdata=data.frame("CVTOT"=x),se.fit=TRUE,type = "response")
+  Pr_inf_sP_ngbin_1<-predict(RegZero_inf_sP_ngbin_1,
+                         newdata=data.frame("CVTOT"=x),se.fit=TRUE,type = "response")
+  Pr_inf_sP_ngbin_2<-predict(RegZero_inf_sP_ngbin_2,
+                         newdata=data.frame("CVTOT"=x),se.fit=TRUE,type = "response")
+  # Poisson - blue
+  # Geometric - red
+  # Default - pink
+  # NegBin - orange
+  lines(x,Pr_inf_sP_c1,col="blue",type="l",lwd=2,lty=1)
+  lines(x,Pr_inf_sP_c2,col="blue",type="l",lwd=2,lty=2)
+  lines(x,Pr_inf_sP_c3,col="blue",type="l",lwd=2,lty=3)
+  lines(x,Pr_inf_sP_def,col="pink",type="l",lwd=2,lty=1)
+  # Curiosamente estas dos no van tan mal
+  lines(x,Pr_inf_sP_geo1,col="red",type="l",lwd=2,lty=1)
+  lines(x,Pr_inf_sP_geo2,col="red",type="l",lwd=2,lty=2)
+  # BinomNeg
+  lines(x,Pr_inf_sP_ngbin_1,col="orange",type="l",lwd=2,lty=1)
+  lines(x,Pr_inf_sP_ngbin_2,col="orange",type="l",lwd=2,lty=2)
+  legend("topright", c("Poisson 1","Poisson 2","Poisson 3","Default"
+    ,"Geometric 1","Geometric 2", "Binom 1", "Binom 2"),
+         lty=c(1,2,3,1,1,2,1,2),col=c(rep("blue",3),"pink",rep("red",2),rep("orange",2)),
+         ncol=1, lwd=rep(2,7), inset = .05)
+  # Comparación de los modelos
+  print(AIC(RegZero_inf_sP_c1,RegZero_inf_sP_c2,RegZero_inf_sP_c3,
+      RegZero_inf_sP_def,RegZero_inf_sP_geo1,RegZero_inf_sP_geo2,RegZero_inf_sP_ngbin_1,
+      RegZero_inf_sP_ngbin_2))
+  # Una de alternativa suele ser aplicar el logaritmo de los datos
+  data_tmp$GB.Seqs.log <- as.numeric(log(data_tmp$GB.Seqs + 1))
+  summary(data_tmp$GB.Seqs.log)
+  #windows()
+  plot(data_tmp$CVTOT, data_tmp$GB.Seqs.log, col = "blue",
+       xlab = "CvTot",ylab = "log(Appearances + 1)", main = paste("Log appearances, ",a))
+  lines(x,log(Pr_inf_sP_c1+1),col="blue",type="l",lty =1, lwd = 2)
+  lines(x,log(Pr_inf_sP_c2+1),col="blue",type="l",lty = 2, lwd = 2)
+  lines(x,log(Pr_inf_sP_c3+1),col="blue",type="l",lty = 3, lwd = 2)
+  lines(x, log(Pr_inf_sP_def+1), col="pink", type="l", lty = 1,lwd = 2)
+  lines(x,log(Pr_inf_sP_geo1+1),col="red",type="l",lty = 1,lwd = 2)
+  lines(x,log(Pr_inf_sP_geo1+1),col="red",type="l",lty = 2,lwd = 2)
+  lines(x,log(Pr_inf_sP_ngbin_1+1),col="orange",type="l",lty = 1, lwd = 2)
+  lines(x,log(Pr_inf_sP_ngbin_2+1),col="orange",type="l",lty = 2, lwd = 2)
+  legend("topright", c("Poisson 1","Poisson 2","Poisson 3","Default"
+    ,"Geometric 1","Geometric 2", "Binom 1", "Binom 2"),
+         lty=c(1,2,3,1,1,2,1,2),col=c(rep("blue",3),"pink",rep("red",2),rep("orange",2)),
+         ncol=1, lwd=rep(2,7), inset = .05)
+}
+```
+
+#### GAMLSS - Respuesta Apariciones
+
+```{r}
+## Modelos paramétricos via GAMLSS (Generalize Aditive models for location scale and shape)
+l_a <- c(0.0)
+x <- sort(x)
+for (a in l_a){
+  # Eliminamos datos fuera de lugar
+  lower_bound <- quantile(y, 0.00);lower_bound
+  upper_bound <- quantile(y, 1 - a);upper_bound
+
+  outlier_ind <- which(y < lower_bound | y > upper_bound)
+  if (!is.na(outlier_ind[1])){
+    data_tmp <- data_filtered[-outlier_ind,]
+  }else{
+    data_tmp <- data_filtered}
+  ## Estudio de las distribuciones
+  #windows()
+  op <- par(mfrow = c(2, 4))
+  dPO <- histDist(data_tmp$GB.Seqs, "PO",
+                  main = "PO", trace = FALSE, xlim=c(0,20))     # Poisson
+  dNBI <- histDist(data_tmp$GB.Seqs, "NBI",
+                   main = "NBI", trace = FALSE,xlim=c(0,20))   # Binomial negativa tipo 1
+  dPIG <- histDist(data_tmp$GB.Seqs, "PIG",
+                   main = "PIG", trace = FALSE,xlim=c(0,20))   # Poisson inverse gaussian
+  dSI <- histDist(data_tmp$GB.Seqs, "SICHEL",
+                  main = "SICHEL", trace = FALSE, xlim=c(0,20)) # Sichel? Inverse Gaussian distribution
+  dZIP <- histDist(data_tmp$GB.Seqs, "ZIP",
+                   main = "ZIP", trace = FALSE, xlim=c(0,20))  # Zero inflated poisson
+  dZIP2 <- histDist(data_tmp$GB.Seqs, "ZIP2",
+                    main = "ZIP2", trace = FALSE, xlim=c(0,20)) # Zero inf. pois. 2
+  dDel <- histDist(data_tmp$GB.Seqs, "DEL",
+                    main = "DEL", trace = FALSE, xlim=c(0,20)) # Zero inf. pois. 2
+  par(op)
+  print(AIC(dPO, dNBI, dPIG, dSI, dZIP, dZIP2, dDel))
+
+  ## En base al AIC nos quedaríamos con dPIG que es un modelo de poisson pero descartariamos claramente los de ceros
+  ## inflados.
+
+  ## A través del ajuste de gamlss ajustamos distintos modelos con diferentes familias de funciones
+  ## Eliminapos PO, ZIP y ZIP2 dado que sus AIC están fuera de lugar en comparación a los otros 3
+  fam.gamlss <- c("NBI", "NBII", "PIG", "DEL", "SICHEL")
+  m.l <- m.q <- m.s <- m.lq <-list()
+  ## Ajuste lineal con enlaces
+  for (i in 1:5) {
+    m.l[[fam.gamlss[i]]] <- gamlss(GB.Seqs~ CVTOT, data=na.omit(data_tmp),
+                                   family = fam.gamlss[i], n.cyc = 5, trace = FALSE)$aic
+  }
+  ## Regresión polinómico de grado 2 con los enlaces
+  for (i in 1:5) {
+    m.q[[fam.gamlss[i]]] <-GAIC(  gamlss(GB.Seqs ~ poly(CVTOT,2),
+                                         data=data_tmp, family = fam.gamlss[i],
+                                         n.cyc = 5, trace = FALSE))
+  }
+  ## Smooth cubic splines (suavización via splines cúbicos)
+  for (i in 1:5) {
+    m.s[[fam.gamlss[i]]] <-GAIC(  gamlss(GB.Seqs ~ cs(CVTOT),
+                                         data=na.omit(data_tmp), family = fam.gamlss[i],
+                                         n.cyc = 5, trace = FALSE))
+  }
+  print(unlist(m.l))
+  print(unlist(m.q))
+  print(unlist(m.s))
+
+  ## Igual que se visualizaba anteriormente, los mejores resultados vienen de PIG, DEL y SICHEL (Igual
+  # a como ocurre en la versión de Manuel)
+
+  # sigma.fo permite otorgar una formula para ajustar un modelo para el parámetro sigma (desviación)
+  m.ql <- list()
+  for (i in 1:5) {
+    m.ql[[fam.gamlss[i]]] <- GAIC(gamlss(GB.Seqs ~ poly(CVTOT, 2),
+                                         data=na.omit(data_tmp), sigma.fo = ~CVTOT,
+                                         family = fam.gamlss[i], n.cyc = 5, trace = FALSE))
+  }
+  print(unlist(m.ql))
+
+  # Nuevamente apenas hay mejoría.
+  ## En cuanto al "mejor" modelo:
+  ##  DEL - pero desafortunadamente este resultado es bastante poco ajustado debido a que se fija unicamente a la zona inferior
+  ##  Ajustamos también PIG
+  ##  El ajuste vía smoothing spline - aunque el ajuste por regresión polinómico local (grado 2)
+  # tampoco queda descartado. - Nuevamente lo mismo que para Manuel.
+
+  ## En base a esto vamos a evaluar los resultados via plot
+  # Lineal + ajuste de sd
+  mL <- gamlss(GB.Seqs~CVTOT , data=na.omit(data_tmp), family =SICHEL,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Cuadrático + ajuste de sd
+  mC <- gamlss(GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family = SICHEL,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Vía smoothing spline + ajuste de sd
+  mS <- gamlss(GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family = SICHEL,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+
+  # Obtenemos predicciones
+  mL.p <- predict(mL, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mC.p <- predict(mC, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mS.p <- predict(mS, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  # Ploteamos
+  #windows()
+  par(mfrow = c(1,1))
+  plot(data_tmp$CVTOT,data_tmp$GB.Seqs,pch=16,ylim=c(0,200), xlab="CVTOT",
+      ylab="Appearances",main=paste("Filtro: ",a))
+  lines(x,mL.p,col="red",type="l",lwd=2)
+  lines(x,mC.p,col="blue",type="l",lwd=2)
+  lines(x,mS.p,col="orange",type="l",lwd=2)
+  legend("topright", c("SICHEL.Lineal","SICHEL.Cuadrático","SICHEL.Splines"),
+         lty=c(2,2,2),col=c("red","blue","orange"), ncol=1, lwd=rep(2,3), inset = .05, cex=0.75)
+  
+  ## En base a esto vamos a evaluar los resultados via plot - PIG
+  # Lineal + ajuste de sd
+  mL <- gamlss(GB.Seqs~CVTOT , data=na.omit(data_tmp), family = PIG,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Cuadrático + ajuste de sd
+  mC <- gamlss(GB.Seqs~CVTOT+I(CVTOT^2) , data=na.omit(data_tmp), family = PIG,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+  # Vía smoothing spline + ajuste de sd
+  mS <- gamlss(GB.Seqs~cs(CVTOT) , data=na.omit(data_tmp), family = PIG,
+               sigma.fo=~CVTOT, n.cyc = 5, trace = FALSE)
+
+  # Obtenemos predicciones
+  mL.p <- predict(mL, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mC.p <- predict(mC, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  mS.p <- predict(mS, what = "mu", newdata=data.frame("CVTOT"=x),
+                  type = "response", terms = NULL, se.fit = FALSE, data = na.omit(data_tmp))
+  # Ploteamos
+  #windows()
+  par(mfrow = c(1,1))
+  plot(data_tmp$CVTOT,data_tmp$GB.Seqs,pch=16,ylim=c(0,200), xlab="CVTOT",
+      ylab="Appearances",main=paste("Filtro: ",a))
+  lines(x,mL.p,col="red",type="l",lwd=2)
+  lines(x,mC.p,col="blue",type="l",lwd=2)
+  lines(x,mS.p,col="orange",type="l",lwd=2)
+  legend("topright", c("PIG.Lineal","PIG.Cuadrático","PIG.Splines"),
+         lty=c(2,2,2),col=c("red","blue","orange"), ncol=1, lwd=rep(2,3), inset = .05, cex=0.75)
+}
+```
+
+## Regresión cuantil
+
+```{r}
+## Regresión quantil
+# Vector de cuantiles seleccionados (siempre un número impar con la mediana en medio):
+quant <- c(0.05, 0.10, 0.25, 0.40, 0.50, 0.60, 0.75, 0.90, 0.95)
+L <- (length(quant)/2)+0.5
+
+# Datos para figuras
+quant2 <- as.character(format(quant,digits=2))
+colores <- topo.colors(L)[L:1]
+leg <- numeric(length=(L+1))
+for ( i in 1:(L-1) )  leg[i] <- paste(quant2[i]," - ",quant2[2*L-i],sep="")
+leg[L] <- "0.50"; leg[L+1] <- "Mean"
+
+# linear model
+lin.mod <- rq(GB.Seqs~ CVTOT, data=data_filtered, tau=quant ,method="br")
+summary(lin.mod,se="boot")   # Tantos ceros implican que las regresiones cuantil tengan pendiente no significativamente distintas de cero hasta quentiles muy elevados
+
+plot(data_filtered$CVTOT,data_filtered$GB.Seqs,pch=16,col=1,ylim=c(0,38),xlab="CvIndex",ylab="Appearances",main="")
+for (i in 1:(L-1))
+{
+  rq_i <- rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L-i] ,method="br", alpha = .05, ci = T)
+  rq_i2 <- rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L+i] ,method="br", alpha = .05, ci = T)
+  abline(rq_i,col=colores[i], lty=1, lwd =2)
+  abline(rq_i2,col=colores[i], lty=1,lwd =2 )
+}
+abline(rq(GB.Seqs~ CVTOT, data=data_filtered,tau=quant[L] ,method="br"),col="tomato",lty=1,lwd=2)
+abline(lm(GB.Seqs~ CVTOT, data=data_filtered),col="red", lty=2, lwd = 2)
+legend("topright",leg, col=c(colores[(L-1):1],"tomato","red"), lty=c(rep(1,L),2), inset=0.025,lwd = 2)
+```
+
+Los resultados son bastante esperables sobre todo teniendo en cuenta la cantidad de 0's que tienen los datos de partida. Como se puede ver salvo para casos de cuantiles muy extremos 0.05-0.95 o 0.1-0.9, no se ve una pendiente significativa.
+
+## Análisis no paramétricos
+
+Análisis via curvas spline:
+
+```{r warning=FALSE}
+splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT,columnay = 'Apariciones', type = 'regular') {
+  x_l <- DataSub[,columna_x]
+  y_l <- DataSub[,columna_y]
+  if (type == 'b' || type == 'p'){
+    ind_x <- sort(x_l, index.return = T)$ix
+    x_l <- x_l[ind_x]
+    y_l <- y_l[ind_x]
+  }
+	# Fit spline to data, with cross-validation to pick lambda
+  if (type == 'regular'){
+	  spl<-smooth.spline(x=x_l,y=y_l,df=df)
+  }
+  if (type == 'b')
+  {
+    nodos <- seq(min(x_l), max(x_l), by = m)
+    x_diseno <- bs(x = x_l, knots = nodos)
+    spl <- lm(y_l~x_diseno)
+  }
+  if (type == 'p')
+  {
+    spl <- gam(y_l ~ s(x_l, k=df, bs = "cr"))
+    #gam.check(spl)
+  }
+	Grid <- seq(from=min(x_l),to=max(x_l),length.out=m)
+	if (type == 'regular'){
+	  Main<-predict(spl,x=Grid)$y
+	  Estim<-matrix(nrow=m,ncol=B)}
+	if (type == 'b' || type == 'p'){
+	  Grid <- x_l
+	  Main<-predict(spl)
+	  Estim <- matrix(nrow = dim(DataSub)[1], ncol = B)}
+	for (i in 1:B) {
+		DataRes<-DataSub[sample(dim(DataSub)[1],replace=TRUE),c(columna_x,columna_y)]
+		x_loc <- DataRes[,columna_x]
+    y_loc <- DataRes[,columna_y]
+		if (type == 'b' || type == 'p')
+		{
+		  ind_x <- sort(x_loc, index.return = T)$ix
+      x_loc <- x_loc[ind_x]
+      y_loc <- y_loc[ind_x]
+		}
+		# Fit spline to data, with cross-validation to pick lambda
+		if (type == 'regular')
+		  spl <- smooth.spline(x=x_loc,y=y_loc,df=df)
+		if (type == 'b'){
+		  nodos <- seq(min(x_loc), max(x_loc), by = m)
+      x_loc_diseno <- bs(x = x_loc, knots = nodos)
+      spl <- lm(y_loc~x_diseno)
+		}
+    if (type == 'p')
+    {
+      spl <- gam(y_loc ~ s(x_loc, k=df, bs = "cr"))
+    }
+		if (type == 'regular'){
+		  Grid <- seq(from=min(x_loc),to=max(x_loc),length.out=m)
+		  Estim[,i]<-predict(spl,x=Grid)$y}
+		if (type == 'b' || type == 'p'){
+		  Estim[,i]<-predict(spl)}
+	} 
+	Lower<-2*Main-apply(Estim,1,quantile,probs=1-alpha/2)
+	Upper<-2*Main-apply(Estim,1,quantile,probs=alpha/2)
+	plot(x_l,y_l,pch=16,col="blue",ylim=c(min(y_l),max(y_l)),xlab="CvIndex",ylab=columnay,
+		main=mainT)
+	lines(Grid,Main,col="red",lwd=2)
+	lines(Grid,Lower,col="red",lty=2)
+	lines(Grid,Upper,col="red",lty=2)
+	plot(Grid,Main,col="red",type="l",lwd=2,ylim = c(min(Lower),max(Upper)),xlab="CvIndex",ylab=columnay)
+	lines(Grid,Lower,col="red",lty=2)
+	lines(Grid,Upper,col="red",lty=2)
+	return(spl)}
+############################################################
+```
+
+Estudios a través de curvas Spline:
+  * Smoothing spline:
+    * Problema: selección de los grados de libertad, en este caso no parece muy problemático dado que con 4 ya obtenemos un buen ajuste y su incremento solo implica un crecimiento del sobreajuste y una menor suavidad de la curva.
+
+```{r warning=FALSE}
+par(mar=c(1,1,1,1))
+## Modelos no paramétricos:
+#### Splines.
+l_a <- c(0.0, 0.01, 0.05)
+for (a in l_a)
+{
+  # Eliminamos datos fuera de lugar
+  lower_bound <- quantile(y, 0.00);lower_bound
+  upper_bound <- quantile(y, 1 - a);upper_bound
+
+  outlier_ind <- which(y < lower_bound | y > upper_bound)
+  if (!is.na(outlier_ind[1])){
+    data_tmp <- data_filtered[-outlier_ind,]
+  }else{
+    data_tmp <- data_filtered}
+  dfs <- seq(2, 10, by = 2)
+  #windows()
+  par(mfrow=c(1,2))
+  for (df in dfs)
+  {
+    splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,300,0.025,1000,paste("Smoothing Spline Regression ",df,'(dfs) Filtro = ',a), columnay = 'Log(Apariciones +1)')
+    #splines_adjust(data_tmp, 'GB.Seqs', 'CVTOT', df,300,0.025,1000,paste("Smoothing Spline Regression ",df,'(dfs) Filtro = ',a), columnay = 'Apariciones')
+  }
+}
+```
+
+  * B-Splines - Se puede ver claramente que el ajuste es altamente similar al obtenido con el smoothing spline, a mayores incrementar los df's o filtrar outliers no implica grandes cambios. 
+  
+```{r warning=FALSE}
+l_a <- c(0.0, 0.025,0.05)
+for (a in l_a){
+  # Eliminamos datos fuera de lugar
+  lower_bound <- quantile(y, 0.00);lower_bound
+  upper_bound <- quantile(y, 1 - a);upper_bound
+
+  outlier_ind <- which(y < lower_bound | y > upper_bound)
+  if (!is.na(outlier_ind[1])){
+    data_tmp <- data_filtered[-outlier_ind,]
+  }else{
+    data_tmp <- data_filtered}
+  dfs <- seq(3, 10, by = 3)
+  #windows()
+  par(mfrow=c(1,2))
+  spls <- numeric(3)
+  i <- 1
+  for (df in dfs)
+  {
+    spls[i] <- splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,6,0.5,1000,paste("B-Spline Regression ",df,'(dfs) alpha = ',a), type = 'b', columnay = 'Log(Apariciones+1)')
+    i <- i + 1
+  }
+}
+```
+
+  * P-Splines - los resultados de la evaluación del modelo vía gam.check demuestran que no es viable el P-spline pues no se cumplen las hipótesis de partida, además en la mayor parte de casos el valor de k se encuentra extrañamente infraestimado.
+  
+```{r eval=FALSE, warning=FALSE, include=FALSE}
+# Selección de la dimensión de la base y base a emplear:
+l_a <- c(0.0, 0.025,0.05)
+for (a in l_a){
+  # Eliminamos datos fuera de lugar
+  lower_bound <- quantile(y, 0.00);lower_bound
+  upper_bound <- quantile(y, 1 - a);upper_bound
+
+  outlier_ind <- which(y < lower_bound | y > upper_bound)
+  if (!is.na(outlier_ind[1])){
+    data_tmp <- data_filtered[-outlier_ind,]
+  }else{
+    data_tmp <- data_filtered}
+  # Cr - cubic regression spline
+  # tp - thin plate spline
+  bases <- c('cr', 'tp')
+  for (k in seq(5,30, by = 5))
+  {
+    spl <- gam(data_tmp$Log.GB.Seqs ~ s(data_tmp$CVTOT, k=k, bs = "tp"))
+    print(gam.check(spl))
+  }
+}
+# A la vista de los resultados ofrecidos por gam.check:
+#     En la mayoría de casos se infraestima el valor de K
+#     La distribución teórica no se sigue ni por asomo
+#     El histograma que debería ser normal no lo es
+#     Entre los residuos y predictor lineal no se observa tendencia, pero se ve claramente que el predictor lineal es y=0 
+# o casi
+```
+  
+  Simplemente para ver como sería el ajuste, pese a que este tipo de modelos creo que ya deberían quedar descartados.
+  
+```{r warning=FALSE}
+l_a <- c(0.0, 0.025,0.05)
+for (a in l_a){
+  # Eliminamos datos fuera de lugar
+  lower_bound <- quantile(y, 0.00);lower_bound
+  upper_bound <- quantile(y, 1 - a);upper_bound
+
+  outlier_ind <- which(y < lower_bound | y > upper_bound)
+  if (!is.na(outlier_ind[1])){
+    data_tmp <- data_filtered[-outlier_ind,]
+  }else{
+    data_tmp <- data_filtered}
+  dfs <- seq(15, 21, by = 3)
+  #windows()
+  par(mfrow=c(3,2))
+  spls <- numeric(3)
+  i <- 1
+  for (df in dfs)
+  {
+    spls[i] <- splines_adjust(data_tmp, 'Log.GB.Seqs', 'CVTOT', df,6,0.5,1000,paste("B-Spline Regression ",df,'(K) alpha = ',a), type = 'p')
+    i <- i + 1
+  }
+}
+```
+
+## Regresión logística: paramétrica y no paramétrica.
+
+Tras lo comentado acerca de las diferencias entre el número de secuenciaciones asociadas a los distintos haplotipos es obvio que el número de apariciones en GenBank dependerá en gran medida del haplotipo que al que pertenezca la mutación. Por tanto, es probable que la magnitud de las ocurrencias en GenBank pueda no ser relevante y únicamente lo sea si aparece o no. En base a esta idea se plantea discretizar la variable GB.Seqs y ajustar tres modelos: regresión logística clásica, regresión logística local y loess.
+
+  * Opción A: poner a 1 si Apariciones > 0
+  * Opción B: poner a 1 si Apariciones > filtro, con filtro > 1, a la vista de los resultados del histograma no parece sensato dado que eliminaríamos la mayor parte de la información y nos quedaríamos con muy pocos datos para hacer la regresión.
+
+```{r warning=FALSE}
+par(c(1,3))
+hist(data_filtered$GB.Seqs, breaks = 'fd', freq = F, main = 'Histograma original')
+hist(data_filtered$GB.Seqs[data_filtered$GB.Seqs > 1], breaks = 'fd', freq = F, main = 'Histograma GB.Seqs > 0')
+hist(data_filtered$GB.Seqs[data_filtered$GB.Seqs > 2], breaks = 'fd', freq = F, main = 'Histograma original > 1')
+data_filtered$Bin.GB.Seqs[data_filtered$GB.Seqs > 1] <- 1
+# Regresiones logísticas
+plot(data_filtered$CVTOT,data_filtered$Bin.GB.Seqs,pch=16,col="blue",ylim=c(0,1),xlab="CvIndex",ylab="Bin(Appearances)")
+# Regresión logística clásica
+mod_logit <- glm(Bin.GB.Seqs~CVTOT, family = binomial(link = 'logit'), data = data_filtered)
+summary(mod_logit)
+# Predictions
+x_pred <- data.frame(CVTOT = seq(-1,2, length = 1000))
+pred <- predict(mod_logit, x_pred,se.fit = T, type = 'response')
+lines(x_pred$CVTOT, pred$fit, col = 'red', lwd = 2)
+lines(x_pred$CVTOT, pred$fit + pred$se.fit*1.96, col = 'red', lty = 2)
+lines(x_pred$CVTOT, pred$fit - pred$se.fit*1.96, col = 'red', lty = 2)
+
+# Regresión loess (olvidamos el carácter dicotómico de la variable)
+idx <- sort(data_filtered$CVTOT,index.return=TRUE)$ix
+x_sort <- data_filtered$CVTOT[idx]
+y_sort=data_filtered$Bin.GB.Seqs[idx]
+lo <- loess(y_sort~x_sort)
+pred_lo <- predict(lo, se = TRUE)
+lines(x_sort,pred_lo$fit,col="green",lwd=2)
+lines(x_sort,pred_lo$fit+pred_lo$se.fit*1.96,col="green",lwd=1, lty = 2)
+lines(x_sort,pred_lo$fit-pred_lo$se.fit*1.96,col="green",lwd=1, lty = 2)
+
+# Regresión logística local
+h <- h.select(data_filtered$CVTOT, data_filtered$Bin.GB.Seqs)
+log_loc <- sm.binomial(data_filtered$CVTOT,data_filtered$Bin.GB.Seqs,h=h,add=T,col="red",lwd=2,pch=28,ylim=c(0,0.3))
+lines(log_loc$eval.points,log_loc$estimate,type="l",col="blue",lwd=2)
+lines(log_loc$eval.points,log_loc$upper,col="blue",lty=2)
+lines(log_loc$eval.points,log_loc$lower,col="blue",lty=2)
+
+legend("topright", c("Logistica","Loess","Logistica Local"),lty=c(1,1,1),col=c('red', 'green','blue'),ncol=1,lwd=rep(2,3), inset = .05)
+```
+
+A la vista de los resultados parece lógico decir que la regresión logística clásica obvia la caída final de probabilidad, pero por otro lado parece correlar en gran medida con los visto para los ajustes no paramétricos tipo, spline.
+
+## 25/10/2020 - Comentado con Antón.
+
+A la vista de los resultados provistos se ve un comportamiento contraintuitivo o irregular de los CVindex en relación a las apariciones en genBank. Lo esperable es que a medida que el índice de conservación se incremente (cvindex 1.0 indica sobre un 60-80% de conservación en la base bajo estudio) el número de variaciones asociadas a dicho índice caiga. Pero en base a lo visto en los ajustes parece que este comportamiento no se asegura entre 0-1 donde a medida que el índice de conservación sube también lo hace la probabilidad de variación (ajuste dicotómico) o el número de variaciones (ajustes no paramétricos). 
+Propuesto:
+  
+  * Construcción de histogramas en rangos de 0.5.
+  * Análisis univariante de los CVTOT para Apariciones = 0.
+  
+```{r eval=FALSE, include=FALSE}
+length_data_apar <- sum(data_filtered$GB.Seqs > 0);length_data_apar
+length_data_0 <- sum(data_filtered$GB.Seqs == 0);length_data_0
+total_pos_variantes <- length(unique(data_filtered$Genomic))-1;total_pos_variantes
+length_data_apar/total_pos_variantes
+```
+  
+Pasamos a ver como se distribuyen los CVIndex para Apariciones = 0, y como se distribuyen los datos cuando el número de apariciones es > 0:
+
+```{r eval=FALSE, include=FALSE}
+par(mfrow = c(2,2))
+data_0_apar <- data_filtered$CVTOT[data_filtered$GB.Seqs == 0]
+labels <- c(-1,-0.5,0,0.5,1,1.5,2)
+h <- hist(data_0_apar, breaks = 'fd', freq = T, xlab = 'CVIndex', main = 'Histograma CVIndex (Apariciones = 0)')
+barplot(h$counts/nrow(data_filtered),names = h$mids,main = 'Histograma CVIndex (Apariciones = 0)/Total posiciones' )
+
+data_1_apar <- data_filtered$CVTOT[data_filtered$GB.Seqs > 0]
+h <- hist(data_1_apar, breaks = 'fd', freq = T, xlab = 'CVIndex', main = 'Histograma CVIndex (Apariciones > 0)')
+barplot(h$counts/nrow(data_filtered),names = h$mids,main = 'Histograma CVIndex (Apariciones > 0)/Total posiciones' )
+```
+
+Los resultados me dejan algo confuso, dado que da la sensación de que el comportamiento es el opuesto al esperado.  
+  
+  * El gráfico de Apariciones = 0 indica que el número de ocurrencias en GenBank es alto para valores bajos del CVIndex, mientras que para valores altos es bajo. Cosa que va en contra de lo esperado dado que las regiones de CVIndex alto debería implicar altos niveles de conservación (1:1.5 implica conservación entorno 40-60%)
+  * El histograma de Apariciones > 0 muestra dos crecimientos inexplicables entorno al 0:0.5 y nuevamente entorno al valor 2.0, cosa que nuevamente contraviene el comportamiento esperado.
+
+```{r eval=FALSE, include=FALSE}
+breaks <- seq(-1, 2, by = 0.25)
+# Histogramas
+log.apariciones <- numeric(length(breaks)-1)
+log.apariciones.norm <- numeric(length(breaks)-1)
+apariciones <- numeric(length(breaks) - 1)
+apariciones.norm <- numeric(length(breaks)-1)
+count.apariciones <- numeric(length(breaks) - 1)
+count.apariciones.norm <- numeric(length(breaks) - 1)
+for (i in seq(length(breaks)-1))
+{
+  log.apariciones[i] <- sum(data_filtered$Log.GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])
+  log.apariciones.norm[i] <- sum(data_filtered$Log.GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length_data_apar
+  apariciones[i] <- sum(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])
+  apariciones.norm[i] <- sum(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length_data_apar
+  count.apariciones[i] <- length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1] & data_filtered$GB.Seqs > 0])
+  count.apariciones.norm[i] <- length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1] & data_filtered$GB.Seqs > 0])/length_data_apar
+}
+par(mfrow = c(2,3))
+barplot(apariciones, names = breaks[1:length(breaks)-1], ylab = 'Total Variaciones Registradas', xlab = 'CVIndex', col = "#69b3a2")
+barplot(log.apariciones, names =  breaks[1:length(breaks)-1], ylab = 'Total Log(Variaciones Registradas)', xlab = 'CVIndex', col = "#69b3a2")
+barplot(count.apariciones, names =  breaks[1:length(breaks)-1], ylab = 'Number of CVIndex variations', xlab = 'CVIndex', col = "#69b3a2")
+barplot(apariciones.norm, names =  breaks[1:length(breaks)-1], ylab = 'Total Variaciones Registradas / #Places with variations', xlab = 'CVIndex', col = "#69b3a2")
+barplot(log.apariciones.norm, names =  breaks[1:length(breaks)-1], ylab = 'Log(Variaciones Registradas)/ #Places with variations', xlab = 'CVIndex', col = "#69b3a2")
+barplot(count.apariciones.norm, names =  breaks[1:length(breaks)-1], ylab = '#CVIndex variations/# Places with variation', xlab = 'CVIndex', col = "#69b3a2")
+```
+
+Obviamente el primero de los gráficos muestra un pico enorme entre 0:0.5 pero este es debido a las variaciones de la posición 2706 que toma valor 40793, por tanto no es demasiado esclarecedor. Por otro lado, tanto el segundo como el tercero muestran casos muy parecidos. En el segundo gráfico se está usando escala logarítimica y en el tercero es la cuenta de casos con variaciones sin atender al número de estas.
+
+#### 29/10/2020
+
+En base a lo comentado por Antón resulta algo complejo la comparación de los distintos histogramas obtenidos y entonces es interesante hacerlos comparables. El problema surge de que en cada bloque, región o intervalo se ubica un número diferente de residuos y por tanto el primer histograma no es del todo comparable. Por otro lado, el histograma número 3 ofrece el número de residuos pero deja de lado totalmente el número de repeticiones de estos lo que tampoco es "justo". La idea mostrar la media de variaciones por residuo en cada uno de los intervalos.
+
+```{r eval=FALSE, include=FALSE}
+breaks <- seq(-1, 2, by = 0.125)
+# Histogramas
+apariciones.media <- numeric(length(breaks)-1)
+log.apariciones.media <- numeric(length(breaks) - 1)
+for (i in seq(length(breaks)-1))
+{
+  apariciones.media[i] <- sum(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])
+  log.apariciones.media[i] <- sum(data_filtered$Log.GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])/length(data_filtered$GB.Seqs[data_filtered$CVTOT >= breaks[i] & data_filtered$CVTOT < breaks[i+1]])
+}
+par(mfrow=c(1,2))
+barplot(apariciones.media, names = breaks[1:length(breaks)-1], ylab = 'Media Variaciones Registradas', xlab = 'CVIndex', col = "#69b3a2")
+barplot(log.apariciones.media, names = breaks[1:length(breaks)-1], ylab = 'Media Log Variaciones por intervalo', xlab = 'CVIndex', col = "#69b3a2")
+```
+
+Los resultados de las medias de variaciones por intervalo se ven extremadamente sesgadas por el número de variaciones que presentan ciertos residuos (máximo de apariciones se encuentra en ~40000) por lo que la gráfica parece me poco realista (¿hay ~40000 por que el haplogrupo al que pertenece ha sido extremadamente secuenciado o por que es una variación altamente registrada?). Por otro lado, el gráfico de las medias de las log variaciones muestra un comportamiento mucho más cercano al esperado para valores de CVIndex más bajos se obtienen unas medias más altas (menor índice de conservación, implica por tanto mayor número de variantes) y una caída paulatina (con un ligero repunte entorno al 1.0) hasta los valores más altos (parece que tratar con el logaritmo de las apariciones aproxima correctamente el comportamiento esperado).
+
+## 02/11/2020 
+
+Variación asociada a un haplogrupo e individuo pertenece a dicho haplogrupo - eliminar (sacar las mismas gráficas) - Incorporado.
+
+Cambiar la base de datos para coger solo de humano y quitar lo de EColi. Ya incorporado en los análisis superiores
+
+## 05/11/2020
+
+Tratar de incluir la información de los haplogrupos a modo de nueva variable:
+
+  * Hasta el momento se han corregido las apariciones en base a si una variación X está asociada a un haplogrupo y adicionalmente el individuo que posee dicha variación pertenece a dicho haplogrupo.
+  * Probar a ubicar los haplogrupos distintos que no han sido asociados a ningún haplogrupo en la variantes. En principio, una variación que aparezca en múltiples haplogrupos no asociados puede aportar información acerca del número de ocurrencias y lo mismo para el caso donde una el número de haplogrupos es bajo. (uno indicaría mucha presencia de la variación mientas que la otra probablemente muchas secuenciaciones del haplogrupo)
+  
+  Los modelos a ajustar serán:
+    
+    * Modelo aditivo con variables CVIndex únicamente a modo de control.
+    * Modelo aditivo con variables CVIndex y haplogrupos_distintos, y se incorporarán dos versiones con y sin interacción.
+
+```{r eval=FALSE, include=FALSE}
+md_control <- gam(Log.GB.Seqs~s(CVTOT), data = data_filtered)
+par(mfrow = c(1,4))
+gam.check(md_control)
+summary(md_control)
+par(mfrow = c(1,1))
+plot(md_control,shade=T,residuals=T,cex=4)
+```
+
+En base a los resultados obtenidos se puede decir que a nivel de ajuste de datos la variable CVTOT presenta significancia clara. Además en base al gam.check podemos "asegurar" que el número de grados de libertad dados a la variable no se encuentra en ningún caso infraestimado. Por otro lado, la deviance es ínfima lo que tiene sentido debido a la enorme dispersión que presentan los datos iniciales. Pero dado que a nosotros solamente nos interesa capturar la tendencia de los datos y no realmente ajustar un modelo para hacer predicciones continuamos hacia adelante.
+
+```{r eval=FALSE, include=FALSE}
+md_adjust_1 <- gam(Log.GB.Seqs~s(CVTOT) + s(distinct_haplogroups), data = data_filtered)
+par(mfrow = c(1,4))
+gam.check(md_adjust_1)
+summary(md_adjust_1)
+par(mfrow = c(1,2))
+plot(md_adjust_1,shade=T,residuals=T,cex=4)
+vis.gam(md_adjust_1, plot.type = "contour")
+```
+
+Obviamente al incorporar la variable "distinct.haplogroups" la cantidad de variabilidad explicada por el modelo crece enormemente, pero es más debido a la correlación (clara) existenten entre la variable regresora y la variable a regresada (a más secuencias en asociadas a la variación mayor número esperado de haplogrupos asociado). En base a eso podemos asegurar que no existe comportamiento "caracterizable" de atípico sino que se sigue una pauta lógica.
+
+Por contrastar la existencia de interacción entre CVIndex y los haplogrupos distintos:
+
+```{r eval=FALSE, include=FALSE}
+md_adjust_1 <- gam(Log.GB.Seqs~s(CVTOT) + s(distinct_haplogroups) + s(CVTOT, distinct_haplogroups), data = data_filtered)
+par(mfrow = c(1,4))
+gam.check(md_adjust_1)
+summary(md_adjust_1)
+par(mfrow = c(1,2))
+plot(md_adjust_1,shade=T,residuals=T,cex=4)
+vis.gam(md_adjust_1, plot.type = "contour")
+```
+
+A la vista de los resultados habría que descartar la interacción entre las variables regresoras como elemento que ayude a explicar el número de secuencias.

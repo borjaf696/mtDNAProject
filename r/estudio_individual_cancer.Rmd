@@ -1,0 +1,130 @@
+---
+title: "Estudio cancer individual"
+author: "Borja Freire Castro"
+date: "6/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(pscl)
+require(boot)
+require(VGAM)
+require(gamlss)
+require(gamlss.dist)
+require(locfit)
+require(KernSmooth)
+require(MASS)
+require(quantreg)
+require(splines)
+require(mgcv)
+require(sm)
+require(arules)
+library(dplyr)
+```
+
+```{r warning=FALSE}
+splines_adjust<-function(DataSub,columna_y, columna_x, df,m,alpha,B,mainT,columnay = 'Apariciones', type = 'regular') {
+  x_l <- DataSub[,columna_x]
+  y_l <- DataSub[,columna_y]
+  if (type == 'b' || type == 'p'){
+    ind_x <- sort(x_l, index.return = T)$ix
+    x_l <- x_l[ind_x]
+    y_l <- y_l[ind_x]
+  }
+	# Fit spline to data, with cross-validation to pick lambda
+  if (type == 'regular'){
+	  spl<-smooth.spline(x=x_l,y=y_l,df=df)
+  }
+  if (type == 'b')
+  {
+    nodos <- seq(min(x_l), max(x_l), by = m)
+    x_diseno <- bs(x = x_l, knots = nodos)
+    spl <- lm(y_l~x_diseno)
+  }
+  if (type == 'p')
+  {
+    spl <- gam(y_l ~ s(x_l, k=df, bs = "cr"))
+    #gam.check(spl)
+  }
+	Grid <- seq(from=min(x_l),to=max(x_l),length.out=m)
+	if (type == 'regular'){
+	  Main<-predict(spl,x=Grid)$y
+	  Estim<-matrix(nrow=m,ncol=B)}
+	if (type == 'b' || type == 'p'){
+	  Grid <- x_l
+	  Main<-predict(spl)
+	  Estim <- matrix(nrow = dim(DataSub)[1], ncol = B)}
+	for (i in 1:B) {
+		DataRes<-DataSub[sample(dim(DataSub)[1],replace=TRUE),c(columna_x,columna_y)]
+		x_loc <- DataRes[,columna_x]
+    y_loc <- DataRes[,columna_y]
+		if (type == 'b' || type == 'p')
+		{
+		  ind_x <- sort(x_loc, index.return = T)$ix
+      x_loc <- x_loc[ind_x]
+      y_loc <- y_loc[ind_x]
+		}
+		# Fit spline to data, with cross-validation to pick lambda
+		if (type == 'regular')
+		  spl <- smooth.spline(x=x_loc,y=y_loc,df=df)
+		if (type == 'b'){
+		  nodos <- seq(min(x_loc), max(x_loc), by = m)
+      x_loc_diseno <- bs(x = x_loc, knots = nodos)
+      spl <- lm(y_loc~x_diseno)
+		}
+    if (type == 'p')
+    {
+      spl <- gam(y_loc ~ s(x_loc, k=df, bs = "cr"))
+    }
+		if (type == 'regular'){
+		  Grid <- seq(from=min(x_loc),to=max(x_loc),length.out=m)
+		  Estim[,i]<-predict(spl,x=Grid)$y}
+		if (type == 'b' || type == 'p'){
+		  Estim[,i]<-predict(spl)}
+	} 
+	Lower<-2*Main-apply(Estim,1,quantile,probs=1-alpha/2)
+	Upper<-2*Main-apply(Estim,1,quantile,probs=alpha/2)
+	plot(x_l,y_l,pch=16,col="blue",ylim=c(min(y_l),max(y_l)),xlab="CvIndex",ylab=columnay,main=mainT)
+	lines(Grid,Main,col="red",lwd=2)
+	lines(Grid,Lower,col="red",lty=2)
+	lines(Grid,Upper,col="red",lty=2)
+	plot(Grid,Main,col="red",type="l",lwd=2,ylim = c(min(Lower),max(Upper)),xlab="CvIndex",ylab=columnay)
+	lines(Grid,Lower,col="red",lty=2)
+	lines(Grid,Upper,col="red",lty=2)
+	return(spl)}
+############################################################
+```
+
+
+## Estudio sobre cáncer independientes
+
+```{r cars}
+prefix <- '../output/cancer_specific/'
+files <- list.files(prefix, full.names = TRUE)
+for (file in files){
+  data_tmp <- read.csv(file)
+  head(data_tmp)
+  data_tmp_agg <- data.frame(data_tmp %>% group_by(Key) %>% summarise_at(c("CVTOT","Ocurrencias"),sum))
+  data_tmp_agg$CVTOT <- data_tmp_agg$CVTOT / data_tmp_agg$Ocurrencias
+  data_tmp_agg$Log.GB.Seqs <- log(data_tmp_agg$Ocurrencias+1)
+  dfs <- c(3)
+  #windows()
+  par(mfrow=c(1,2))
+  spls <- numeric(3)
+  i <- 1
+  if (length(unique(data_tmp_agg$CVTOT)) >= 4){
+    for (df in dfs)
+    {
+      print(file)
+      splines_adjust(data_tmp_agg, 'Log.GB.Seqs', 'CVTOT', df,6,0.5,1000,paste("B-Spline Regression "), type = 'b', columnay = 'Log(Apariciones+1)')
+      i <- i + 1
+    }
+  }
+}
+```
+
+
+
+
