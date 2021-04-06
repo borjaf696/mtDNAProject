@@ -117,10 +117,23 @@ Objetivo:
 
   * Las variantes asociadas son conocidas y en principio se asocian por nivel de ocurrencia en los distintos individuos dentro de un haplogrupo (entre otras cosas). Por tanto, es lógico pensar que al realizar el primer filtrado por número de individuos que poseen dicha variación lo que nos saldrán serán las posiciones y las variaciones asociadas a ciertos haplogrupos.
   * Por otro lado, la coocurrencia de las variaciones debería coincidir con el haplogrupo compartido en los individuos. Es decir, si alguna medida de información (VI, MI o $V$ en SVD) reporta que el nivel de coocurrencia entre dos variantes X, Y es elevada y que además dichas variantes X, Y no están asociadas al mismo haplogrupo entonces hemos encontrado algo de interés.
+  
+```{r}
+# Se define la función que calcula la similitud
+indice_jaccard <- function(var1, var2, haplogrupos) {
+  # Esta función calcula el índice jaccard entre dos columnas de un dataframe.
+  # El valor 1 indica presencia y el valor 0 ausencia.
+  m11 <- sum(haplogrupos[, var1] == 1 & haplogrupos[, var2] == 1)
+  m10 <- sum(haplogrupos[, var1] == 1 & haplogrupos[, var2] == 0)
+  m01 <- sum(haplogrupos[, var1] == 0 & haplogrupos[, var2] == 1)
+  indice <- m11 / sum(m01 + m10 + m11)
+  return(indice)
+}
+```
 
 ```{r}
 library(arules)
-thresholds <- c(0.2, 0.1, 0.05)
+thresholds <- c(0.2, 0.1, 0.05, 0.025)
 for (threshold in thresholds){
   variantes_filtered <- data_variantes
   for (pos in names(data_variantes)[2:c])
@@ -169,14 +182,6 @@ for (threshold in thresholds){
       m_svd_rmse[i,j] <- sqrt(mean((variants_emb[,i] - variants_emb[,j])^2))
   }
   m_svd_rmse <- abs(m_svd_rmse - max(m_svd_rmse))
-  top <- 3
-  for (i in seq(1:c_local))
-  {
-    df_tmp <- data.frame(m_svd_rmse[i,])
-    top_n_values <- df_tmp%>% top_n(top)
-    print(paste('Asociaciones: ',features_study[i]))
-    print(features_study[df_tmp$m_svd_rmse.i... %in% top_n_values[[1]]])
-  }
   # MI/VI
   m_vi <- matrix(0, nrow = c_local, ncol = c_local)
   m_mi <- mutinformation(data_variantes_tmp[,features_study], method="emp")
@@ -193,8 +198,65 @@ for (threshold in thresholds){
   heatmap(m_svd_rmse, main = paste("V SVD (relation) with ", threshold),labRow = features_study, labCol = features_study)
   heatmap(m_vi, main = paste("Information value with ", threshold), labRow = features_study, labCol = features_study)
   heatmap(m_mi, main = paste("Mutual information with ", threshold))
+  ## Asociaciones
+  top <- 5
+  svd_asociaciones <-  matrix(0, nrow = c_local, ncol = top-1)
+  rownames(svd_asociaciones) <- features_study
+  for (i in seq(1:c_local))
+  {
+    df_tmp <- data.frame(m_svd_rmse[i,])
+    top_n_values <- df_tmp%>% top_n(top)
+    print(paste('Asociaciones: ',features_study[i]))
+    print(features_study[df_tmp$m_svd_rmse.i... %in% top_n_values[[1]]])
+    svd_asociaciones[features_study[i],] <- features_study[df_tmp$m_svd_rmse.i... %in% top_n_values[[1]]][2:top]
+  }
+  mi_asociaciones <- matrix(0, nrow = c_local, ncol = top -1)
+  rownames(mi_asociaciones) <- features_study
+  for (i in seq(1:c_local))
+  {
+    df_tmp <- data.frame(m_mi[i,])
+    top_n_values <- df_tmp%>% top_n(top)
+    print(paste('Asociaciones: ',features_study[i]))
+    print(features_study[df_tmp$m_mi.i... %in% top_n_values[[1]]])
+    mi_asociaciones[features_study[i],] <- features_study[df_tmp$m_mi.i... %in% top_n_values[[1]]][2:top]
+  }
+  # Asociaciones no asociadas SVD
+  asociaciones_no_asociadas_svd <- matrix(0, nrow = c_local, ncol = top -1)
+  rownames(asociaciones_no_asociadas_svd) <- features_study
+  for (i in seq(1:c_local))
+  {
+    if (hits[i] == 0){
+      df_tmp <- data.frame(m_svd_rmse[i,])
+      top_n_values <- df_tmp%>% top_n(top)
+      asociaciones_no_asociadas_svd[features_study[i],] <- features_study[df_tmp$m_svd_rmse.i... %in% top_n_values[[1]]][2:top]
+    }
+  }
+  # Asociaciones no asociadas MI
+  asociaciones_no_asociadas_mi <- matrix(0, nrow = c_local, ncol = top -1)
+  rownames(asociaciones_no_asociadas_mi) <- features_study
+  for (i in seq(1:c_local))
+  {
+    if (hits[i] == 0){
+      df_tmp <- data.frame(m_svd_rmse[i,])
+      top_n_values <- df_tmp%>% top_n(top)
+      asociaciones_no_asociadas_mi[features_study[i],] <- features_study[df_tmp$m_svd_rmse.i... %in% top_n_values[[1]]][2:top]
+    }
+  }
+  ## Export
+  df_no_svd <- data.frame(asociaciones_no_asociadas_svd)
+  names(df_no_svd) <- seq(1:(top-1))
+  df_no_svd <- df_no_svd[df_no_svd$`1` != 0,]
+  write.csv(df_no_svd,paste('../output_r/svd_variantes_no_asociadas_',threshold,'.csv'))
+  df_no_mi <- data.frame(asociaciones_no_asociadas_mi)
+  names(df_no_mi) <- seq(1:(top-1))
+  df_no_mi <- df_no_svd[df_no_mi$`1` != 0,]
+  write.csv(df_no_svd,paste('../output_r/mi_variantes_no_asociadas_',threshold,'.csv'))
 }
 ```
+
+## Estudio de variantes no asociadas:
+
+  Para cada variante no asociada determinar que variantes están asociadas con esta o tienen cierto nivel de asociación. Construir un csv con la asociación de las variantes no asociaciones a haplogrupos.
 
 
 

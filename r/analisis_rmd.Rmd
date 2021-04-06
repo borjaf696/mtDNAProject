@@ -55,7 +55,7 @@ data <- na.omit(data)
 data_neg <- data[data$CVTOT == -1,]
 data_filtered <- data[data$CVTOT != -1,]
 # Haplogrupos diferentes - 6- 36
-data_filtered$distinct_haplogroups <- apply(data_filtered[6:36], 1,function(x) sum(x > 0))
+#data_filtered$distinct_haplogroups <- apply(data_filtered[6:36], 1,function(x) sum(x > 0))
 # Visualización de los hist de data_filtered
 sum(data_filtered$GB.Seqs == 0)
 sum(data_filtered$GB.Seqs != 0)
@@ -66,8 +66,8 @@ hist(data_filtered$GB.Seqs[data_filtered$GB.Seqs > 1], xlab = 'Apariciones', bre
 par(mfrow = c(1,2))
 hist(data_filtered$CVTOT[data_filtered$GB.Seqs != 0],
      breaks = 'fd', freq = F, xlab = 'CVindex Apariciones > 0', main = 'Histograma CV(apariciones > 0)')
-hist(data_filtered$CVTOT[data_filtered$GB.Seqs == 0],
-     breaks = 'fd', freq = F, xlab = 'CVindex Apariciones == 0', main = 'Histograma CV(apariciones == 0)')
+#hist(data_filtered$CVTOT[data_filtered$GB.Seqs == 0],
+#     breaks = 'fd', freq = F, xlab = 'CVindex Apariciones == 0', main = 'Histograma CV(apariciones == 0)')
 summary(data_neg)
 summary(data_filtered)
 par(mfrow = c(1,1))
@@ -135,7 +135,7 @@ Repetimos los experimentos realizados para el caso original pero tras haber elim
       * Link: logit
     * Binomial Negativa
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 ## Conditional variance - modo univariante pensar en el modo multi
 con_var <- function(df, residuos, col_y, col_x, new_data, FUN = glm, ...)
 {
@@ -273,7 +273,7 @@ for (a in l_a)
 
 ```{r}
 ## Modelos paramétricos via GAMLSS (Generalize Aditive models for location scale and shape)
-l_a <- c()
+l_a <- c(0)
 x <- sort(x)
 for (a in l_a){
   # Eliminamos datos fuera de lugar
@@ -709,7 +709,7 @@ Como primer detalle indicar que según se ver existen:
 
 Pasamos a ver como se distribuyen los CVIndex para Apariciones = 0, y como se distribuyen los datos cuando el número de apariciones es > 0:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 par(mfrow = c(2,2))
 data_0_apar <- data_filtered$CVTOT[data_filtered$GB.Seqs == 0]
 labels <- c(-1,-0.5,0,0.5,1,1.5,2)
@@ -726,7 +726,7 @@ Los resultados me dejan algo confuso, dado que da la sensación de que el compor
   * El gráfico de Apariciones = 0 indica que el número de ocurrencias en GenBank es alto para valores bajos del CVIndex, mientras que para valores altos es bajo. Cosa que va en contra de lo esperado dado que las regiones de CVIndex alto debería implicar altos niveles de conservación (1:1.5 implica conservación entorno 40-60%)
   * El histograma de Apariciones > 0 muestra dos crecimientos inexplicables entorno al 0:0.5 y nuevamente entorno al valor 2.0, cosa que nuevamente contraviene el comportamiento esperado.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 breaks <- seq(-1, 2, by = 0.25)
 # Histogramas
 log.apariciones <- numeric(length(breaks)-1)
@@ -759,7 +759,7 @@ Obviamente el primero de los gráficos muestra un pico enorme entre 0:0.5 pero e
 
 En base a lo comentado por Antón resulta algo complejo la comparación de los distintos histogramas obtenidos y entonces es interesante hacerlos comparables. El problema surge de que en cada bloque, región o intervalo se ubica un número diferente de residuos y por tanto el primer histograma no es del todo comparable. Por otro lado, el histograma número 3 ofrece el número de residuos pero deja de lado totalmente el número de repeticiones de estos lo que tampoco es "justo". La idea mostrar la media de variaciones por residuo en cada uno de los intervalos.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 breaks <- seq(-1, 2, by = 0.125)
 # Histogramas
 apariciones.media <- numeric(length(breaks)-1)
@@ -794,7 +794,7 @@ Tratar de incluir la información de los haplogrupos a modo de nueva variable:
     * Modelo aditivo con variables CVIndex únicamente a modo de control.
     * Modelo aditivo con variables CVIndex y haplogrupos_distintos, y se incorporarán dos versiones con y sin interacción.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 md_control <- gam(Log.GB.Seqs~s(CVTOT), data = data_filtered)
 par(mfrow = c(1,4))
 gam.check(md_control)
@@ -805,7 +805,7 @@ plot(md_control,shade=T,residuals=T,cex=4)
 
 En base a los resultados obtenidos se puede decir que a nivel de ajuste de datos la variable CVTOT presenta significancia clara. Además en base al gam.check podemos "asegurar" que el número de grados de libertad dados a la variable no se encuentra en ningún caso infraestimado. Por otro lado, la deviance es ínfima lo que tiene sentido debido a la enorme dispersión que presentan los datos iniciales. Pero dado que a nosotros solamente nos interesa capturar la tendencia de los datos y no realmente ajustar un modelo para hacer predicciones continuamos hacia adelante.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 md_adjust_1 <- gam(Log.GB.Seqs~s(CVTOT) + s(distinct_haplogroups), data = data_filtered)
 par(mfrow = c(1,4))
 gam.check(md_adjust_1)
@@ -819,7 +819,7 @@ Obviamente al incorporar la variable "distinct.haplogroups" la cantidad de varia
 
 Por contrastar la existencia de interacción entre CVIndex y los haplogrupos distintos:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 md_adjust_1 <- gam(Log.GB.Seqs~s(CVTOT) + s(distinct_haplogroups) + s(CVTOT, distinct_haplogroups), data = data_filtered)
 par(mfrow = c(1,4))
 gam.check(md_adjust_1)

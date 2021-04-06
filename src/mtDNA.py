@@ -13,7 +13,7 @@ def preprocess_df(df):
     Method to adjust all columns to 'sensitive' formats
     Columns:
         * Change - Mutation - Reference
-        * GB Freq‡ - change to float
+        * GB Freq - change to float
         * GB Seqs
     '''
     mutation, reference = [],[]
@@ -24,11 +24,58 @@ def preprocess_df(df):
     df['Mutated Base'] = mutation
     df['Reference Base'] = reference
     frequencies = []
-    for i in df['GB Freq‡']:
+    for i in df['GB Freq']:
         frequencies.append(float(i.replace('%','')))
-    df['GB Freq‡'] = frequencies
+    df['GB Freq'] = frequencies
 
-def add_cv(df_section, df_control, haplogroups = None):
+def add_cv_generic(df_section, df_control, column = ['Ocurrencias','Concat'], haplogroups = None):
+    '''
+    Method to add cv generic:
+        * Column: Genomic
+    Region:
+        * Ocurrencias
+        * Concat: posRefMut
+    '''
+    print(haplogroups)
+    df_control.groupby('Genomic').first()
+    cvtot, cvmit, appearences, positions, genomic, corrected_appearences, cells_haplogroups = [], [], [], [], [], [], []
+    if haplogroups is not None:
+        haplogroups_ex = df_section.iloc[0].loc[haplogroups]
+        for i, v in enumerate(haplogroups_ex):
+            haplogroups_ex[i] = 0
+    for index, row in df_control.iterrows():
+        genomic_pos = row['Genomic']
+        df_tmp = df_section.loc[df_section['Position'] == genomic_pos]
+        for i2, r2 in df_tmp.iterrows():
+            cvtot.append(row['CVTOT'])
+            appearences.append(r2[column[0]])
+            corrected_appearences.append(r2[column[1]])
+            genomic.append(genomic_pos)
+            if haplogroups is not None:
+                cells_haplogroups.append(r2[haplogroups])
+        if df_tmp.empty and genomic_pos != -1:
+            cvtot.append(row['CVTOT'])
+            appearences.append(0)
+            corrected_appearences.append(0)
+            genomic.append(genomic_pos)
+            if haplogroups is not None:
+                cells_haplogroups.append(haplogroups_ex)
+    df_result = pd.DataFrame(
+        {'CVTOT': cvtot, 'GB Seqs': appearences, 'Key': corrected_appearences, 'Genomic': genomic})
+    if haplogroups is not None:
+        cells_haplogroups = pd.DataFrame(data=cells_haplogroups, columns=haplogroups)
+        cells_columns = cells_haplogroups.columns.values
+        df_result_columns = df_result.columns.values
+        columns = np.append(df_result_columns, cells_columns)
+        df_tmp = pd.concat([df_result.reset_index(), cells_haplogroups.reset_index()], axis=1)
+        df_tmp = df_tmp.drop(df_tmp.columns[0], axis=1)
+        df_tmp.columns = columns
+        return df_tmp
+    else:
+        df_result = df_result.groupby('Key').agg({'GB Seqs':'sum','Genomic':'first','CVTOT':'first'}).reset_index()
+        return df_result
+
+def add_cv(df_section, df_control, columns = ['GB Seqs', 'Curated References'],haplogroups = None):
     '''
     Method to add cv:
         * Column: Genomic
@@ -36,9 +83,11 @@ def add_cv(df_section, df_control, haplogroups = None):
     print(haplogroups)
     df_control.groupby('Genomic').first()
     cvtot, cvmit, appearences, positions, genomic, corrected_appearences, cells_haplogroups = [], [], [], [], [], [], []
-    haplogroups_ex = df_section.iloc[0].loc[haplogroups]
-    for i,v in enumerate(haplogroups_ex):
-        haplogroups_ex[i] = 0
+    if haplogroups is not None:
+        haplogroups_ex = df_section.iloc[0].loc[haplogroups]
+        for i,v in enumerate(haplogroups_ex):
+            haplogroups_ex[i] = 0
+    print(df_section)
     for index, row in df_control.iterrows():
         genomic_pos = row['Genomic']
         df_tmp = df_section.loc[df_section['Position'] == genomic_pos]
@@ -47,18 +96,21 @@ def add_cv(df_section, df_control, haplogroups = None):
             appearences.append(max(r2['GB Seqs'], r2['Curated References']))
             corrected_appearences.append(max(r2['GB Seqs'] - r2['Nb.Seqs.correction'], r2['Curated References']))
             genomic.append(genomic_pos)
-            cells_haplogroups.append(r2[haplogroups])
+            if haplogroups is not None:
+                cells_haplogroups.append(r2[haplogroups])
         if df_tmp.empty and genomic_pos != -1:
             cvtot.append(row['CVTOT'])
             appearences.append(0)
             corrected_appearences.append(0)
             genomic.append(genomic_pos)
-            cells_haplogroups.append(haplogroups_ex)
+            if haplogroups is not None:
+                cells_haplogroups.append(haplogroups_ex)
     df_result = pd.DataFrame({'CVTOT':cvtot,'GB Seqs':appearences,'GB.Seqs.Corrected':corrected_appearences,'Genomic':genomic})
-    cells_haplogroups = pd.DataFrame(data = cells_haplogroups, columns = haplogroups)
-    cells_columns = cells_haplogroups.columns.values
-    df_result_columns = df_result.columns.values
-    columns = np.append(df_result_columns , cells_columns)
+    if haplogroups is not None:
+        cells_haplogroups = pd.DataFrame(data = cells_haplogroups, columns = haplogroups)
+        cells_columns = cells_haplogroups.columns.values
+        df_result_columns = df_result.columns.values
+        columns = np.append(df_result_columns , cells_columns)
     if haplogroups is not None:
         df_tmp =  pd.concat([df_result.reset_index(), cells_haplogroups.reset_index()],axis = 1)
         df_tmp = df_tmp.drop(df_tmp.columns[0],axis = 1)
@@ -221,6 +273,22 @@ def __store_haplogroups(df_haplogroups):
                 haplogroups_dict[index][i_split[1]+'_'+i_split[2]] = 1
     pd.DataFrame.from_dict(haplogroups_dict, orient = 'index').to_csv('../output/haplogroups_matrix.csv')
 
+'''
+Different cancer assessment
+yue	mcmahon2	mcmahon	hopkins	davis	levin_somatic	larman	mitomap	larman_trad
+'''
+def __cancer_assessment(df, prefix = 'ssu', columns = ['yue','mcmahon2','mcmahon','hopkins','davis','levin_somatic','mitomap','larman_trad']):
+    file = '../output/cancer_specific/'+prefix
+    for column in columns:
+        df_tmp = df.groupby([column])['Position'].count().reset_index()
+        df_tmp = df_tmp.loc[(df_tmp[column] != 0) & (df_tmp[column] != '0') & (df_tmp[column] != '_')]
+        print(df_tmp)
+        if (len(df_tmp) > 0):
+            cancers_list = df_tmp.loc[df_tmp['Position'] >= np.median(df_tmp['Position'])][column]
+            for cancer in cancers_list:
+                file_tmp = file+'_'+str(column)+'_'+str(cancer)+'.csv'
+                df.loc[df[column] == cancer].to_csv(file_tmp)
+
 if __name__ == '__main__':
     #pd.set_option('display.max_rows', None)
     mitomap, tsv_read = [], False
@@ -235,7 +303,8 @@ if __name__ == '__main__':
     df_haplogrupos = pd.read_csv(haplogrupos_control, sep = '\t')
     df_haplogrupos_indexed = df_haplogrupos.set_index('Top Level Haplogroup')
     __store_haplogroups(df_haplogrupos_indexed)
-    for i in sys.argv:
+    sep, generic = '    ', False
+    for pos,i in enumerate(sys.argv):
         if tsv_read:
             mitomap = i.strip().split(',')
             tsv_read = False
@@ -243,30 +312,52 @@ if __name__ == '__main__':
             tsv_read = True
         if i == '--process-whole-variants':
             process_whole = True
+        if i == '--sep':
+            sep = sys.argv[pos+1]
+        if i == '--generic':
+            generic = True
+    print('Separator: ',sep)
     ssu_df, lsu_df = pd.DataFrame(), pd.DataFrame()
     if len(mitomap) != 0:
         print('MitoMap pages: ', mitomap)
         for i in mitomap:
-            if 'RNR1' in i:
-                ssu_df = pd.read_csv(i, sep = '\t')
-            elif 'RNR2' in i:
-                lsu_df = pd.read_csv(i, sep = '\t')
+            if 'RNR1' in i or 'ssu' in i:
+                ssu_df = pd.read_csv(i, sep = sep)
+            elif 'RNR2' in i or 'lsu' in i:
+                lsu_df = pd.read_csv(i, sep = sep)
         # Process ssu
-        preprocess_df(ssu_df)
+        print(ssu_df.columns.values)
+        if not generic:
+            preprocess_df(ssu_df)
         print('SSU MitoMap information: ',ssu_df)
-        ssu_df, haplogroups = get_haplogroups(ssu_df, df_haplogroups = df_haplogrupos_indexed, suffix = 'ssu')
-        print(ssu_df)
-        results_df = add_cv(ssu_df, df_control_ssu, haplogroups)
+        if not generic:
+            ssu_df, haplogroups = get_haplogroups(ssu_df, df_haplogroups = df_haplogrupos_indexed, suffix = 'ssu')
+            results_df = add_cv(ssu_df, df_control_ssu, haplogroups)
+        else:
+            results_df = add_cv_generic(ssu_df, df_control_ssu)
+            ssu_cvs = ssu_df.merge(results_df[['Key','CVTOT']], left_on = 'Concat', right_on = 'Key')
+            __cancer_assessment(ssu_cvs)
+            ssu_cvs.to_csv('../output/ssu_df_cv.csv')
+            ssu_cvs.loc[ssu_cvs['CVTOT'] >= 1.8].to_csv('../output/ssu_df_1.8.csv')
         results_df.to_csv('../output/ssu_df.csv')
         print('SSU MitoMap information: ', results_df)
         # Process lsu
-        preprocess_df(lsu_df)
+        if not generic:
+            preprocess_df(lsu_df)
         lsu_df = lsu_df.loc[:, ~lsu_df.columns.str.match("Unnamed")]
         # Getting haplogroups
-        lsu_df, haplogroups = get_haplogroups(lsu_df, df_haplogroups = df_haplogrupos_indexed, suffix = 'lsu')
-        results_df = add_cv(lsu_df, df_control_lsu, haplogroups)
+        if not generic:
+            lsu_df, haplogroups = get_haplogroups(lsu_df, df_haplogroups = df_haplogrupos_indexed, suffix = 'lsu')
+            results_df = add_cv(lsu_df, df_control_lsu, haplogroups)
+        else:
+            results_df = add_cv_generic(lsu_df, df_control_lsu)
+            lsu_cvs = lsu_df.merge(results_df[['Key', 'CVTOT']], left_on='Concat', right_on='Key')
+            __cancer_assessment(lsu_cvs, prefix = 'lsu')
+            lsu_cvs.to_csv('../output/lsu_df_cv.csv')
+            lsu_cvs['CVTOT'] = pd.to_numeric(lsu_cvs['CVTOT'])
+            lsu_cvs.loc[lsu_cvs['CVTOT'] >= 1.8].to_csv('../output/lsu_df_1.8.csv')
         results_df.to_csv('../output/lsu_df.csv')
         print('LSU MitoMap information: ', results_df)
-
+'''
     if process_whole:
-        get_whole_data()
+        get_whole_data()'''

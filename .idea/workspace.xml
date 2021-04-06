@@ -1,17 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BranchesTreeState">
-    <expand />
-    <select />
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="BRANCH:master" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8cd050ac-d47e-4a90-96c6-16c509928b13" name="Default Changelist" comment="- Fix">
-      <change afterPath="$PROJECT_DIR$/control/haplogrupos.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/coocurrence/coocurrence.tvs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/mtRNR1.tsv" afterDir="false" />
+    <list default="true" id="8cd050ac-d47e-4a90-96c6-16c509928b13" name="Default Changelist" comment="- AICs for Splines/logistic">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/control/DV-gen-LSU.csv" beforeDir="false" afterPath="$PROJECT_DIR$/control/DV-gen-LSU.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mtRNR1.tsv" beforeDir="false" afterPath="$PROJECT_DIR$/data/mtRNR1.tsv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mtRNR1.tvs" beforeDir="false" afterPath="$PROJECT_DIR$/data/mtRNR1.tvs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mtRNR2.tvs" beforeDir="false" afterPath="$PROJECT_DIR$/data/mtRNR2.tvs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/lsu_df.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/lsu_df.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/lsu_haplogroups.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/lsu_haplogroups.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/ssu_df.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/ssu_df.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/ssu_haplogroups.csv" beforeDir="false" afterPath="$PROJECT_DIR$/output/ssu_haplogroups.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/r/analisis_rmd.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.Rmd" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/r/analisis_rmd.html" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.Rmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/analisis_rmd_SSU.html" beforeDir="false" afterPath="$PROJECT_DIR$/r/analisis_rmd_SSU.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r/coocurrencia_rmd.Rmd" beforeDir="false" afterPath="$PROJECT_DIR$/r/coocurrencia_rmd.Rmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mtDNA.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/mtDNA.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,7 +82,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/mtDNA.py" />
-      <option name="PARAMETERS" value="--mitomap ../data/mtRNR1.tvs,../data/mtRNR2.tvs --process-whole-variants" />
+      <option name="PARAMETERS" value="--mitomap ../data/datos_cancer_lsu.csv,../data/datos_cancer_ssu.csv --process-whole-variants --sep , --generic" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -97,7 +118,12 @@
       <workItem from="1605282094879" duration="36113000" />
       <workItem from="1606566207334" duration="2618000" />
       <workItem from="1608337213224" duration="1492000" />
-      <workItem from="1611663894785" duration="10734000" />
+      <workItem from="1611663894785" duration="12548000" />
+      <workItem from="1614586057375" duration="95000" />
+      <workItem from="1615308426812" duration="6001000" />
+      <workItem from="1615451523610" duration="2142000" />
+      <workItem from="1615567678832" duration="3759000" />
+      <workItem from="1617542174842" duration="9518000" />
     </task>
     <task id="LOCAL-00001" summary="Commit with RScript">
       <created>1602651262101</created>
@@ -281,7 +307,14 @@
       <option name="project" value="LOCAL" />
       <updated>1611935334527</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="- AICs for Splines/logistic">
+      <created>1612346008531</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1612346008531</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -317,7 +350,19 @@
         </entry>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
@@ -353,69 +398,58 @@
     <MESSAGE value="- Final version" />
     <MESSAGE value="- Readme changes" />
     <MESSAGE value="- Fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Fix" />
+    <MESSAGE value="- AICs for Splines/logistic" />
+    <option name="LAST_COMMIT_MESSAGE" value="- AICs for Splines/logistic" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="411" y="123" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1611905724193">
+    <state x="677" y="96" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1617555561014">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="411" y="123" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1611905724193" />
-    <state x="729" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1605903648597">
+    <state x="677" y="96" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1617555561014" />
+    <state x="92" y="92" width="1736" height="856" key="DiffContextDialog" timestamp="1614586152039">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="729" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1605903648597" />
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1612178142515">
+    <state x="92" y="92" width="1736" height="856" key="DiffContextDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1614586152039" />
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1617619129177">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1612178142515" />
-    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1612178142515">
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617619129177" />
+    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1617619129177">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1612178142515" />
-    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1612178142514">
+    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617619129177" />
+    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1617619129177">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1612178142514" />
-    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1612178142515">
+    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617619129177" />
+    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1617619129177">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1612178142515" />
-    <state width="1877" height="348" key="GridCell.Tab.1.bottom" timestamp="1604336525096">
+    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617619129177" />
+    <state width="1877" height="348" key="GridCell.Tab.1.bottom" timestamp="1617616950770">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="348" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1604336525096" />
-    <state width="1877" height="348" key="GridCell.Tab.1.center" timestamp="1604336525096">
+    <state width="1877" height="348" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617616950770" />
+    <state width="1877" height="348" key="GridCell.Tab.1.center" timestamp="1617616950770">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="348" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1604336525096" />
-    <state width="1877" height="348" key="GridCell.Tab.1.left" timestamp="1604336525096">
+    <state width="1877" height="348" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617616950770" />
+    <state width="1877" height="348" key="GridCell.Tab.1.left" timestamp="1617616950770">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="348" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1604336525096" />
-    <state width="1877" height="348" key="GridCell.Tab.1.right" timestamp="1604336525096">
+    <state width="1877" height="348" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617616950770" />
+    <state width="1877" height="348" key="GridCell.Tab.1.right" timestamp="1617616950770">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="348" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1604336525096" />
+    <state width="1877" height="348" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617616950770" />
     <state x="598" y="281" key="MultipleFileMergeDialog" timestamp="1611831005098">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="598" y="281" key="MultipleFileMergeDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1611831005098" />
-    <state x="736" y="222" key="RollbackChangesDialog" timestamp="1604719612387">
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1612346012557">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="736" y="222" key="RollbackChangesDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1604719612387" />
-    <state x="361" y="165" key="SettingsEditor" timestamp="1603910167655">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="361" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1603910167655" />
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2" timestamp="1612178131738">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1612178131738" />
-    <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1603962380008">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="777" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040@0.0.1920.1040" timestamp="1603962380008" />
+    <state x="552" y="253" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1612346012557" />
     <state x="789" y="438" key="git4idea.rebase.GitUnstructuredEditor" timestamp="1611831007036">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -424,12 +458,12 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="738" y="414" key="git4idea.ui.GitResetDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1611830704797" />
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1605949096237">
+    <state x="623" y="225" key="search.everywhere.popup" timestamp="1615397644700">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1605949096237" />
+    <state x="623" y="225" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1615397644700" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/mtDNAProject$mtDNA.coverage" NAME="mtDNA Coverage Results" MODIFIED="1611935223709" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/mtDNAProject$mtDNA.coverage" NAME="mtDNA Coverage Results" MODIFIED="1617619129172" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
 </project>
